@@ -1,8 +1,8 @@
 # Shubharambham Horoscope — Product, Design, and Implementation Notes
 
-**Site:** https://shubharambham.com/horoscope
-**Source code:** https://github.com/smurtym/shubharambham-horoscope-ui-only-site
-**License:** AGPL-3.0
+* **Site:** https://shubharambham.com/horoscope
+* **Source code:** https://github.com/smurtym/shubharambham-horoscope-ui-only-site
+* **License:** AGPL-3.0
 
 This document describes a website that renders a person's Vedic (Jyotish) horoscope from their birth date, time, and place. It is written for three readers: a future version of the author, an AI assistant that picks up the project later, and any other person who ends up maintaining or evaluating it. It records what the product is, why it exists, how it is designed, and how it is built. There is no marketing intent here — only the reasoning and the specifics. The document goes in order: the idea, what it does (features), the design, the implementation, future scope, then the license.
 
