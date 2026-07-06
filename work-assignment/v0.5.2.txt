@@ -1,0 +1,10 @@
+Date format still showing in mm/dd/yyyy. Browser is not respecing locale. Change it back to 3 different drop downs instead of date selector. Keep year range from 1950 to 2100. Make current year, month and date as default.
+
+Planetary positions in mobile unncessary shows headings, which are not needed. It can show something like in 2 lines
+Moon   Mo	  29 Aq 01' 57"  Purva Bhadrapada 3	
+Rasi: Aq  Navamsa: Ge AK Atmakaraka
+
+Remove antardasas that are before birth time. Start first antardasas from birth time.
+
+For calculation of Vimsottari, year is taken as Sun's time for 360 sidereal. It has to be 360 tropical as per JHora software. I feel this is authentic.
+ 
