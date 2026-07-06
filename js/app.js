@@ -25,6 +25,40 @@
 
   function pad(n) { return (n < 10 ? "0" : "") + n; }
 
+  // Populate the hour (0–23) and minute (0–59) dropdowns. Hours read as "14 (2 PM)" so the
+  // 24-hour value and its familiar 12-hour form are both visible (item 11).
+  function populateTime() {
+    var hourSel = byId("hour");
+    for (var h = 0; h < 24; h++) {
+      var h12 = ((h + 11) % 12) + 1;
+      var ampm = h < 12 ? "AM" : "PM";
+      var o = document.createElement("option");
+      o.value = String(h);
+      o.textContent = pad(h) + " (" + h12 + " " + ampm + ")";
+      hourSel.appendChild(o);
+    }
+    var minSel = byId("minute");
+    for (var m = 0; m < 60; m++) {
+      var mo = document.createElement("option");
+      mo.value = String(m);
+      mo.textContent = pad(m);
+      minSel.appendChild(mo);
+    }
+  }
+
+  // Parse a dd/mm/yyyy string into {y,mo,d} with real-calendar validation, or null.
+  function parseDmy(s) {
+    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((s || "").trim());
+    if (!m) return null;
+    var d = +m[1], mo = +m[2], y = +m[3];
+    if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 1 || y > 9999) return null;
+    // Reject impossible dates (e.g. 31/02) by round-tripping through Date.
+    var probe = new Date(Date.UTC(y, mo - 1, d));
+    if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== mo - 1 ||
+      probe.getUTCDate() !== d) return null;
+    return { y: y, mo: mo, d: d };
+  }
+
   function showError(msg) {
     var el = byId("form-error");
     el.textContent = msg;
@@ -35,23 +69,23 @@
     e.preventDefault();
     byId("form-error").hidden = true;
 
-    var date = byId("date").value;                 // "YYYY-MM-DD"
+    var dmy = parseDmy(byId("date").value);        // dd/mm/yyyy
     var hour = byId("hour").value;
     var minute = byId("minute").value;
-    var second = byId("second").value;
     var placeId = byId("place").value;
 
-    if (!date) return showError("Please enter the birth date.");
-    if (hour === "" || minute === "") return showError("Please enter the birth hour and minute.");
+    if (!dmy) return showError("Please enter the birth date as dd/mm/yyyy (e.g. 15/05/1990).");
+    if (hour === "" || minute === "") return showError("Please select the birth hour and minute.");
     if (!placeId) return showError("Please select the birth place.");
 
-    var h = parseInt(hour, 10), mi = parseInt(minute, 10),
-      s = second === "" ? 0 : parseInt(second, 10);
-    if (h < 0 || h > 23 || mi < 0 || mi > 59 || s < 0 || s > 59) {
-      return showError("Please enter a valid time (hour 0–23, minute/second 0–59).");
+    var h = parseInt(hour, 10), mi = parseInt(minute, 10);
+    if (h < 0 || h > 23 || mi < 0 || mi > 59) {
+      return showError("Please select a valid time (hour 0–23, minute 0–59).");
     }
 
-    var dateTime = date + "T" + pad(h) + ":" + pad(mi) + ":" + pad(s);
+    // Internal payload keeps the ISO local datetime; seconds are always :00 (item 10).
+    var dateTime = dmy.y + "-" + pad(dmy.mo) + "-" + pad(dmy.d) +
+      "T" + pad(h) + ":" + pad(mi) + ":00";
 
     var person = {
       Name: byId("name").value.trim(),
@@ -67,6 +101,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     populatePlaces();
+    populateTime();
     byId("birth-form").addEventListener("submit", onSubmit);
   });
 })();

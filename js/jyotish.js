@@ -80,6 +80,10 @@
       grahas[name] = decompose(sidLon);
       grahas[name].name = name;
       grahas[name].abbr = GRAHA_ABBR[name];
+      // Retrograde flag from the astronomy layer (Sun/Moon never; nodes always). Used to
+      // parenthesise the abbreviation, e.g. "(Ju)", per the standard convention.
+      grahas[name].retro = !!trop[name].retro;
+      grahas[name].label = grahas[name].retro ? "(" + GRAHA_ABBR[name] + ")" : GRAHA_ABBR[name];
     });
     var ascSid = norm360(astroResult.ascendantTropical - ay);
     var ascendant = decompose(ascSid);
@@ -103,7 +107,15 @@
     if (within === 14 && index < 15) name = "Purnima";
     else if (within === 14) name = "Amavasya";
     else name = TITHI_NAME[within];
-    return { index: index + 1, paksha: paksha, name: name, display: paksha + " " + name };
+    // How much of the current tithi is still to run: each tithi spans 12° of elongation.
+    var remainingPct = (1 - (diff - index * 12) / 12) * 100;
+    var display = paksha + " " + name;
+    return {
+      index: index + 1, paksha: paksha, name: name, display: display,
+      remainingPct: remainingPct,
+      // e.g. "Krishna Ashtami (45% remaining)"
+      displayFull: display + " (" + Math.round(remainingPct) + "% remaining)"
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -144,45 +156,86 @@
     { lord: "Moon", years: 10 }, { lord: "Mars", years: 7 }, { lord: "Rahu", years: 18 },
     { lord: "Jupiter", years: 16 }, { lord: "Saturn", years: 19 }, { lord: "Mercury", years: 17 }
   ];
-  var YEAR_DAYS = 365.25;
+  // Mean length of a Vimshottari "year". A dasha year is one full revolution of the Sun in
+  // sidereal longitude (360°), i.e. a sidereal year — used only as the initial guess and as
+  // the fallback when no live Sun ephemeris is supplied. See Decisions.md #17.
+  var SIDEREAL_YEAR_DAYS = 365.256363;
 
   function addYears(date, years) {
-    return new Date(date.getTime() + years * YEAR_DAYS * 86400000);
+    return new Date(date.getTime() + years * SIDEREAL_YEAR_DAYS * 86400000);
+  }
+
+  // Signed smallest angular difference, in (−180, 180].
+  function wrap180(x) {
+    x = ((x % 360) + 360) % 360;
+    return x > 180 ? x - 360 : x;
   }
 
   // birthDate: JS Date; moonLonSid: sidereal Moon longitude (deg).
-  function vimshottari(birthDate, moonLonSid) {
+  // opts.sunLonAt(date) -> sidereal Sun longitude (deg) at that instant, and
+  // opts.sunLon0        -> sidereal Sun longitude at birth. When supplied, dasha boundaries
+  // are placed at the instants the Sun's sidereal longitude has advanced by (age·360°),
+  // i.e. the periods are measured by the Earth's actual revolution round the Sun rather than
+  // by fixed-length calendar years (item 8). Without them it falls back to mean years.
+  function vimshottari(birthDate, moonLonSid, opts) {
+    opts = opts || {};
+    var sunLonAt = opts.sunLonAt;
+    var sunLon0 = opts.sunLon0;
+
     var nakIndex = Math.floor(norm360(moonLonSid) / NAK_LEN);
     var startSeq = nakIndex % 9;
     var posInNak = norm360(moonLonSid) - nakIndex * NAK_LEN;
     var fraction = posInNak / NAK_LEN;
 
     var firstYears = DASHA_SEQ[startSeq].years;
+    // Dasha-years already elapsed (within the first Maha Dasha) at the moment of birth.
     var elapsed = fraction * firstYears;
-    // The first Maha Dasha began this many years before birth.
-    var mdStart = addYears(birthDate, -elapsed);
 
+    var YEAR_MS = SIDEREAL_YEAR_DAYS * 86400000;
+    var speedPerMs = 360 / YEAR_MS; // mean solar angular speed, used as the Newton slope.
+
+    // Map a dasha-age A (years since the first Maha Dasha began) to a calendar Date.
+    // Relative to birth (age = `elapsed`, Sun at sunLon0), age A needs (A − elapsed)·360° of
+    // extra solar longitude. Solve for the instant by Newton–Raphson on the true Sun.
+    function dateAtAge(A) {
+      var dAge = A - elapsed;
+      if (!sunLonAt) return addYears(birthDate, dAge); // fallback: mean sidereal years
+      var D = dAge * 360;                              // degrees of Sun motion from birth
+      var t = birthDate.getTime() + dAge * YEAR_MS;    // first guess (mean-rate)
+      var target = norm360(sunLon0 + D);
+      for (var it = 0; it < 12; it++) {
+        var resid = wrap180(sunLonAt(new Date(t)) - target); // small angular error (deg)
+        t -= resid / speedPerMs;                             // Newton step
+        if (Math.abs(resid) < 1e-7) break;                   // ~0.0004″
+      }
+      return new Date(t);
+    }
+
+    var mdStartDate = dateAtAge(0);
     var mahadashas = [];
-    var cursor = mdStart;
+    var mdStartAge = 0;
+    var prevDate = mdStartDate;
     for (var i = 0; i < 9; i++) {
       var seqIndex = (startSeq + i) % 9;
       var md = DASHA_SEQ[seqIndex];
-      var mdEnd = addYears(cursor, md.years);
-      // Antardashas within this Maha Dasha.
       var antars = [];
-      var aCursor = cursor;
+      var aStartAge = mdStartAge;
+      var aStartDate = prevDate;
       for (var j = 0; j < 9; j++) {
         var aSeq = (seqIndex + j) % 9;
         var ad = DASHA_SEQ[aSeq];
         var adYears = md.years * ad.years / 120;
-        var adEnd = addYears(aCursor, adYears);
-        antars.push({ lord: ad.lord, start: aCursor, end: adEnd, years: adYears });
-        aCursor = adEnd;
+        var aEndAge = aStartAge + adYears;
+        var aEndDate = dateAtAge(aEndAge);
+        antars.push({ lord: ad.lord, start: aStartDate, end: aEndDate, years: adYears });
+        aStartAge = aEndAge; aStartDate = aEndDate;
       }
-      mahadashas.push({ lord: md.lord, start: cursor, end: mdEnd, years: md.years, antars: antars });
-      cursor = mdEnd;
+      // The last antardasha's end coincides with the maha dasha's end.
+      mahadashas.push({ lord: md.lord, start: prevDate, end: aStartDate,
+        years: md.years, antars: antars });
+      mdStartAge += md.years; prevDate = aStartDate;
     }
-    return { balanceStart: mdStart, mahadashas: mahadashas };
+    return { balanceStart: mdStartDate, mahadashas: mahadashas };
   }
 
   global.Jyotish = {

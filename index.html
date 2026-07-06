@@ -37,7 +37,7 @@
       <div class="field">
         <label for="name">Name <span class="opt">(optional)</span></label>
         <input type="text" id="name" name="name" autocomplete="off"
-          placeholder="e.g. Ramesh">
+          placeholder="e.g. Ram">
       </div>
 
       <div class="field">
@@ -52,24 +52,24 @@
 
       <div class="field">
         <label for="date">Birth date <span class="req">*</span></label>
-        <input type="date" id="date" name="date" required
-          min="0001-01-01" max="9999-12-31">
+        <input type="text" id="date" name="date" required inputmode="numeric"
+          placeholder="dd/mm/yyyy" autocomplete="off" maxlength="10"
+          pattern="\d{1,2}/\d{1,2}/\d{4}">
+        <p class="hint">Format: dd/mm/yyyy (e.g. 15/05/1990).</p>
       </div>
 
       <fieldset class="field time-field">
         <legend>Birth time <span class="req">*</span></legend>
         <div class="time-inputs">
           <label class="sub">Hour
-            <input type="number" id="hour" name="hour" min="0" max="23"
-              inputmode="numeric" placeholder="HH" required>
+            <select id="hour" name="hour" required>
+              <option value="">HH</option>
+            </select>
           </label>
           <label class="sub">Minute
-            <input type="number" id="minute" name="minute" min="0" max="59"
-              inputmode="numeric" placeholder="MM" required>
-          </label>
-          <label class="sub">Second <span class="opt">(optional)</span>
-            <input type="number" id="second" name="second" min="0" max="59"
-              inputmode="numeric" placeholder="SS">
+            <select id="minute" name="minute" required>
+              <option value="">MM</option>
+            </select>
           </label>
         </div>
         <p class="hint">24-hour clock, local time at the birth place.</p>

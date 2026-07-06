@@ -5,22 +5,28 @@
  * needs, so the JS glue never has to juggle multiple sweph calls or their buffers.
  *
  * Runs in Moshier mode (SEFLG_MOSHIER): Swiss Ephemeris's built-in analytical theory,
- * which needs NO .se1 data files — essential for a static, offline, file:// site.
+ * which needs NO .se1 data files — essential for a static, offline, file:// site. In this
+ * mode Swiss Ephemeris auto-initialises on the first swe_calc_ut() call and needs no
+ * ephemeris path (swe_set_ephe_path) — the .se1 files that a path would point at are only
+ * consulted for SEFLG_SWIEPH/SEFLG_JPLEPH, never for Moshier (see v0.4.0 assignment item 6).
  */
 #include "swephexp.h"
 #include <emscripten.h>
 
 /*
- * Compute a full set of tropical positions for an instant & location.
+ * Compute a full set of tropical positions (and their longitude speeds) for an instant.
  *   tjd_ut         Julian day, Universal Time.
  *   geolat, geolon observer geographic degrees (North +, East +).
- *   out            caller-allocated array of at least 13 doubles, filled as:
+ *   out            caller-allocated array of at least 23 doubles, filled as:
  *                    [0] Sun     [1] Moon    [2] Mars    [3] Mercury  [4] Jupiter
  *                    [5] Venus   [6] Saturn  [7] Uranus  [8] Neptune
- *                    [9] Rahu (mean lunar node, tropical)
+ *                    [9] Rahu (TRUE lunar node, tropical)
  *                    [10] ayanamsa (True Chitrapaksha)
  *                    [11] ascendant (tropical, of date)
  *                    [12] true obliquity of the ecliptic (of date)
+ *                    [13..22] longitude speed (deg/day) of bodies [0..9], same order,
+ *                             so out[13+i] is the speed of the body reported in out[i].
+ *                             Negative speed = retrograde.
  *   serr           caller-allocated char buffer (>= 256) for any error message.
  * Longitudes are apparent geocentric tropical ecliptic of date, degrees [0,360).
  * Returns 0 on success, -1 on error (serr holds the message).
@@ -38,12 +44,15 @@ int se_compute(double tjd_ut, double geolat, double geolon, double *out, char *s
 
   for (i = 0; i < 9; i++) {
     if (swe_calc_ut(tjd_ut, idx[i], iflag, xx, serr) < 0) return -1;
-    out[i] = xx[0];
+    out[i] = xx[0];        /* longitude          */
+    out[13 + i] = xx[3];   /* longitude speed    */
   }
 
-  /* Rahu = mean lunar node (decision: mean, matching v0.1.0). Ketu derived in JS. */
-  if (swe_calc_ut(tjd_ut, SE_MEAN_NODE, iflag, xx, serr) < 0) return -1;
+  /* Rahu = TRUE lunar node (v0.4.0 item 5; supersedes the earlier mean-node choice).
+     Ketu is derived in JS as the opposite point. */
+  if (swe_calc_ut(tjd_ut, SE_TRUE_NODE, iflag, xx, serr) < 0) return -1;
   out[9] = xx[0];
+  out[22] = xx[3];
 
   /* Ayanamsa: True Chitrapaksha (SE_SIDM_TRUE_CITRA), matching v0.1.0 decision #2. */
   swe_set_sid_mode(SE_SIDM_TRUE_CITRA, 0, 0);

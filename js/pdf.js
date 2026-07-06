@@ -59,7 +59,7 @@
 
     // --- Title & birth summary ---
     var name = model.person.Name;
-    doc.setFont("helvetica", "bold").setFontSize(18).setTextColor(30);
+    doc.setFont("courier", "bold").setFontSize(18).setTextColor(30);
     doc.text(name ? name + "'s Horoscope" : "Horoscope", MARGIN, y);
     y += 22;
 
@@ -70,7 +70,7 @@
     var line2 = model.place.city + ", " + model.place.region +
       "  ·  " + model.place.lat.toFixed(4) + "°, " + model.place.long.toFixed(4) + "°  ·  " +
       model.place.tz;
-    doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(90);
+    doc.setFont("courier", "normal").setFontSize(10).setTextColor(90);
     doc.text(line1, MARGIN, y); y += 14;
     doc.text(line2, MARGIN, y); y += 22;
 
@@ -78,7 +78,7 @@
     var g = model.chart.grahas, a = model.chart.ascendant;
     var SIGN = global.Jyotish.SIGN_NAME;
     var values = [
-      ["Tithi", model.tithi.display],
+      ["Tithi", model.tithi.displayFull],
       ["Nakshatra", g.Moon.nakshatra + " (pada " + g.Moon.pada + ")"],
       ["Sun — Vedic (sidereal)", g.Sun.signName],
       ["Sun — Western (tropical)", SIGN[model.westernSign]],
@@ -90,9 +90,9 @@
     doc.setFontSize(10);
     values.forEach(function (row) {
       ensure(16);
-      doc.setFont("helvetica", "bold").setTextColor(60);
+      doc.setFont("courier", "bold").setTextColor(60);
       doc.text(row[0] + ":", MARGIN, y);
-      doc.setFont("helvetica", "normal").setTextColor(30);
+      doc.setFont("courier", "normal").setTextColor(30);
       doc.text(String(row[1]), MARGIN + 150, y);
       y += 16;
     });
@@ -104,7 +104,8 @@
       var out = []; for (var i = 0; i < 12; i++) out.push([]);
       model.chart.order.forEach(function (nm) {
         var gr = model.chart.grahas[nm];
-        out[div === "d9" ? gr.navamsaSign : gr.sign].push(gr.abbr);
+        // gr.label parenthesises retrograde grahas, e.g. "(Ju)".
+        out[div === "d9" ? gr.navamsaSign : gr.sign].push(gr.label);
       });
       return out;
     }
@@ -114,13 +115,13 @@
     return Promise.all([svgToPng(d1svg, 640), svgToPng(d9svg, 640)]).then(function (imgs) {
       ensure(250);
       var chartW = (PAGE_W - 2 * MARGIN - 20) / 2;
-      doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(60);
+      doc.setFont("courier", "bold").setFontSize(11).setTextColor(60);
       doc.text("Charts (" + chartLabel(model.formatKey) + ")", MARGIN, y);
       y += 12;
       var top = y;
       doc.addImage(imgs[0], "PNG", MARGIN, top, chartW, chartW);
       doc.addImage(imgs[1], "PNG", MARGIN + chartW + 20, top, chartW, chartW);
-      doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(110);
+      doc.setFont("courier", "normal").setFontSize(9).setTextColor(110);
       doc.text("D1 · Rasi", MARGIN + chartW / 2, top + chartW + 12, { align: "center" });
       doc.text("D9 · Navamsa", MARGIN + chartW + 20 + chartW / 2, top + chartW + 12,
         { align: "center" });
@@ -128,7 +129,7 @@
 
       // --- Planetary table ---
       ensure(40);
-      doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(60);
+      doc.setFont("courier", "bold").setFontSize(11).setTextColor(60);
       doc.text("Planetary positions", MARGIN, y); y += 16;
       var cols = [
         { x: MARGIN, w: 70, t: "Planet" },
@@ -142,13 +143,13 @@
       cols.forEach(function (col) { doc.text(col.t, col.x, y); });
       y += 4;
       doc.setDrawColor(210); doc.line(MARGIN, y, PAGE_W - MARGIN, y); y += 12;
-      doc.setFont("helvetica", "normal").setTextColor(30);
+      doc.setFont("courier", "normal").setTextColor(30);
       model.chart.order.forEach(function (nm) {
         ensure(16);
         var gr = model.chart.grahas[nm];
         var k = model.karakas[nm];
         var cells = [
-          nm + " (" + gr.abbr + ")",
+          nm + " " + gr.label,
           fmtPos(gr),
           gr.nakshatra + " " + gr.pada,
           gr.signAbbr,
@@ -162,15 +163,15 @@
 
       // --- Vimshottari dasha ---
       ensure(30);
-      doc.setFont("helvetica", "bold").setFontSize(11).setTextColor(60);
+      doc.setFont("courier", "bold").setFontSize(11).setTextColor(60);
       doc.text("Vimshottari Dasha", MARGIN, y); y += 16;
       model.dasha.mahadashas.forEach(function (md) {
         ensure(18);
-        doc.setFont("helvetica", "bold").setFontSize(10).setTextColor(40);
+        doc.setFont("courier", "bold").setFontSize(10).setTextColor(40);
         doc.text(md.lord + "   " + fmtDate(md.start) + " – " + fmtDate(md.end) +
           "   (" + md.years + " yrs)", MARGIN, y);
         y += 14;
-        doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(70);
+        doc.setFont("courier", "normal").setFontSize(9).setTextColor(70);
         md.antars.forEach(function (ad) {
           ensure(13);
           doc.text(ad.lord + "  —  " + fmtDate(ad.start) + " – " + fmtDate(ad.end),
@@ -195,7 +196,7 @@
       doc.setPage(i);
       doc.setDrawColor(220).setLineWidth(0.5);
       doc.line(MARGIN, PAGE_H - MARGIN, PAGE_W - MARGIN, PAGE_H - MARGIN);
-      doc.setFont("helvetica", "normal").setFontSize(8).setTextColor(120);
+      doc.setFont("courier", "normal").setFontSize(8).setTextColor(120);
       doc.textWithLink(FOOTER, MARGIN, PAGE_H - MARGIN + 12, { url: FOOTER_URL });
       doc.text("Page " + i + " of " + pages, PAGE_W - MARGIN, PAGE_H - MARGIN + 12,
         { align: "right" });

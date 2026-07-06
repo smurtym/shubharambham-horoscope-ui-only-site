@@ -30,9 +30,12 @@
   }
 
   // The order in which se_compute() writes the output array (see vendor/sweph/se_shim.c).
+  // [0..9]  longitudes of the ten bodies below
+  // [10]    ayanamsa    [11] ascendant    [12] obliquity
+  // [13..22] longitude speed (deg/day) of bodies [0..9]; negative = retrograde.
   var OUT_LABELS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn",
-    "Uranus", "Neptune", "Rahu"]; // [10]=ayanamsa [11]=ascendant [12]=obliquity
-  var NOUT = 13;
+    "Uranus", "Neptune", "Rahu"];
+  var NOUT = 23;
 
   var Mod = null;        // the instantiated Emscripten module
   var outPtr = 0;        // reusable heap buffer for the 13 output doubles
@@ -80,9 +83,16 @@
     for (var j = 0; j < OUT_LABELS.length; j++) {
       // Latitude is not needed by the Jyotish layer (signs/nakshatra use longitude only),
       // so it is not returned by the shim; report 0 to preserve the {lon,lat} shape.
-      planets[OUT_LABELS[j]] = { lon: norm360(vals[j]), lat: 0 };
+      // speed is the longitude speed (deg/day); retro = moving backwards.
+      var speed = vals[13 + j];
+      planets[OUT_LABELS[j]] = { lon: norm360(vals[j]), lat: 0, speed: speed, retro: speed < 0 };
     }
-    planets.Ketu = { lon: norm360(planets.Rahu.lon + 180), lat: 0 };
+    // Rahu/Ketu (the lunar nodes) are retrograde by tradition and always marked so, even
+    // though the *true* node momentarily turns direct near its stations. Ketu is the point
+    // opposite Rahu, so it shares Rahu's motion.
+    planets.Rahu.retro = true;
+    planets.Ketu = { lon: norm360(planets.Rahu.lon + 180), lat: 0,
+      speed: planets.Rahu.speed, retro: true };
 
     return {
       jdUT: jdUT,

@@ -73,7 +73,16 @@
     var westernSign = Math.floor(sunTropLon / 30);
 
     var karakas = window.Jyotish.charaKarakas(chart.grahas);
-    var dasha = window.Jyotish.vimshottari(birthDate, moonSid);
+    // Vimshottari is measured by the Sun's actual sidereal revolution (item 8): give the
+    // dasha builder a way to read the Sun's sidereal longitude at any instant. The Sun's
+    // geocentric longitude is independent of the observer, so the birth place's lat/long
+    // are passed only to satisfy the compute() signature.
+    function sunSidLonAt(date) {
+      var a = window.Astro.compute(date, place.lat, place.long);
+      return window.Astro.norm360(a.planetsTropical.Sun.lon - a.ayanamsa);
+    }
+    var dasha = window.Jyotish.vimshottari(birthDate, moonSid,
+      { sunLon0: sunSid, sunLonAt: sunSidLonAt });
 
     return {
       person: person,
@@ -120,7 +129,7 @@
       ["Latitude", place.lat.toFixed(4) + "°"],
       ["Longitude", place.long.toFixed(4) + "°"],
       ["Timezone", esc(place.tz)],
-      ["Tithi", esc(model.tithi.display)],
+      ["Tithi", esc(model.tithi.displayFull)],
       ["Nakshatra", esc(g.Moon.nakshatra) + " (pada " + g.Moon.pada + ")"],
       ["Sun sign — Vedic (sidereal)", esc(g.Sun.signName)],
       ["Sun sign — Western (tropical)", esc(SIGN[model.westernSign])],
@@ -146,7 +155,8 @@
     model.chart.order.forEach(function (name) {
       var g = model.chart.grahas[name];
       var sign = divisional === "d9" ? g.navamsaSign : g.sign;
-      out[sign].push(g.abbr);
+      // g.label parenthesises the abbreviation when the graha is retrograde, e.g. "(Ju)".
+      out[sign].push(g.label);
     });
     return out;
   }
@@ -218,9 +228,11 @@
       var g = model.chart.grahas[name];
       var k = model.karakas[name];
       var tr = el("tr");
+      // The abbreviation is parenthesised only when retrograde (g.label), matching the
+      // charts, so "(Ju)" reads as a retrograde graha and "Ju" as direct.
       tr.innerHTML =
-        "<td class=\"pl\">" + esc(PLANET_NAME[name]) + " <span class=\"abbr\">(" +
-        esc(g.abbr) + ")</span></td>" +
+        "<td class=\"pl\">" + esc(PLANET_NAME[name]) + " <span class=\"abbr" +
+        (g.retro ? " retro" : "") + "\">" + esc(g.label) + "</span></td>" +
         "<td>" + esc(fmtPos(g)) + "</td>" +
         "<td>" + esc(g.nakshatra) + " " + g.pada + "</td>" +
         "<td>" + esc(g.signAbbr) + "</td>" +
@@ -232,6 +244,9 @@
     table.appendChild(tbody);
     wrap.appendChild(table);
     section.appendChild(wrap);
+    section.appendChild(el("p", "note",
+      "A graha shown in parentheses — e.g. <span class=\"abbr retro\">(Ju)</span> — is " +
+      "retrograde (vakri). Rahu and Ketu are always retrograde."));
     content.appendChild(section);
   }
 

@@ -33,7 +33,7 @@
     var startY = cy - ((rows.length - 1) * lh) / 2;
     var out = "";
     for (var r = 0; r < rows.length; r++) {
-      var cls = / La( |$)/.test(" " + rows[r] + " ") ? " has-lagna" : "";
+      var cls = / As( |$)/.test(" " + rows[r] + " ") ? " has-lagna" : "";
       out += '<text class="planet' + cls + '" x="' + cx + '" y="' +
         (startY + r * lh) + '">' + esc(rows[r]) + '</text>';
     }
@@ -44,10 +44,10 @@
     return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
   }
 
-  // Build the label list for a sign, prefixing "La" in the ascendant sign.
+  // Build the label list for a sign, prefixing "As" (ascendant) in the ascendant sign.
   function labelsFor(placements, sign, ascSign) {
     var arr = (placements[sign] || []).slice();
-    if (sign === ascSign) arr.unshift("La");
+    if (sign === ascSign) arr.unshift("As");
     return arr;
   }
 
@@ -71,8 +71,10 @@
     for (var s = 0; s < 12; s++) {
       var rc = SOUTH_CELL[s];
       var x = rc[1] * c, y = rc[0] * c;
+      // Fixed-sign charts (South/East) carry the rasi *number* (1..12); the sign is fixed
+      // to the cell so the number, not an abbreviation, is the conventional label (item 4).
       cells += '<text class="sign" x="' + (x + 6) + '" y="' + (y + 15) + '">' +
-        SIGN_ABBR[s] + '</text>';
+        (s + 1) + '</text>';
       cells += labelBlock(labelsFor(placements, s, ascSign), x + c / 2, y + c / 2 + 4, 3);
     }
     var caption = '<text class="chart-title" x="180" y="185">' + esc(title || "") + '</text>';
@@ -94,19 +96,33 @@
     for (var h = 0; h < 12; h++) {
       var sign = (ascSign + h) % 12;
       var pos = NORTH_HOUSE[h];
+      // North Indian houses are fixed and the rasi rotates, so each house is labelled with
+      // the sign occupying it — shown as an abbreviation (Ar, Ta, Ge …) per item 4.
       body += '<text class="sign" x="' + pos[0] + '" y="' + (pos[1] - 12) + '">' +
-        (sign + 1) + '</text>';
+        SIGN_ABBR[sign] + '</text>';
       body += labelBlock(labelsFor(placements, sign, ascSign), pos[0], pos[1] + 6, 3);
     }
     return svgWrap(frame + body);
   }
 
-  // ---- East Indian: 3×3 frame, corners split diagonally (see Decisions #8) --
-  // Fixed signs clockwise from the top-centre cell. [sign, cx, cy]
+  // ---- East Indian (Bengali/Odia/Maithili): 3×3 frame, corners split diagonally ----
+  // Authentic layout (see Decisions #16): Aries (Meṣa) sits in the top-centre cell and the
+  // remaining rasis run ANTI-CLOCKWISE from it, with the signs fixed to their cells (like
+  // the South Indian chart). This replaces the earlier clockwise "self-consistent" guess.
+  // [sign, cx, cy] — cx,cy is the label anchor for each of the 12 compartments.
   var EAST_CELLS = [
-    [0, 180, 55], [1, 285, 40], [2, 320, 80], [3, 300, 180], [4, 320, 285],
-    [5, 285, 320], [6, 180, 305], [7, 75, 320], [8, 40, 285], [9, 60, 180],
-    [10, 40, 75], [11, 75, 40]
+    [0, 180, 60],    // Aries      — top centre
+    [1, 80, 40],     // Taurus     — NW corner, top triangle
+    [2, 40, 80],     // Gemini     — NW corner, left triangle
+    [3, 60, 180],    // Cancer     — left centre
+    [4, 40, 280],    // Leo        — SW corner, top/left triangle
+    [5, 80, 320],    // Virgo      — SW corner, bottom triangle
+    [6, 180, 300],   // Libra      — bottom centre
+    [7, 280, 320],   // Scorpio    — SE corner, bottom triangle
+    [8, 320, 280],   // Sagittarius— SE corner, right triangle
+    [9, 300, 180],   // Capricorn  — right centre
+    [10, 320, 80],   // Aquarius   — NE corner, right triangle
+    [11, 280, 40]    // Pisces     — NE corner, top triangle
   ];
 
   function renderEast(placements, ascSign, title) {
@@ -119,7 +135,7 @@
     for (var i = 0; i < EAST_CELLS.length; i++) {
       var e = EAST_CELLS[i], s = e[0];
       body += '<text class="sign" x="' + e[1] + '" y="' + (e[2] - 16) + '">' +
-        SIGN_ABBR[s] + '</text>';
+        (s + 1) + '</text>';
       body += labelBlock(labelsFor(placements, s, ascSign), e[1], e[2] + 4, 2);
     }
     var caption = '<text class="chart-title" x="180" y="185">' + esc(title || "") + '</text>';
@@ -128,13 +144,16 @@
 
   // Styles are embedded inside the SVG so charts render identically whether shown inline
   // or rasterised for the PDF (where the page stylesheet is not available).
+  // Fixed-width (monospace) typography throughout the charts (item 7), so columns of
+  // planet abbreviations line up and match the rest of the site.
+  var MONO = 'ui-monospace,\"DejaVu Sans Mono\",\"Cascadia Code\",Menlo,Consolas,monospace';
   var SVG_STYLE = '<style>' +
     '.frame{fill:none;stroke:#3a3a3a;stroke-width:1.3}' +
     'line{stroke:#3a3a3a;stroke-width:1.3}' +
-    '.sign{fill:#b8791f;font:600 11px sans-serif;text-anchor:start}' +
-    '.planet{fill:#1a1a1a;font:600 12.5px sans-serif;text-anchor:middle}' +
+    '.sign{fill:#b8791f;font:600 11px ' + MONO + ';text-anchor:start}' +
+    '.planet{fill:#1a1a1a;font:600 12px ' + MONO + ';text-anchor:middle}' +
     '.planet.has-lagna{fill:#b23b3b}' +
-    '.chart-title{fill:#999;font:600 14px sans-serif;text-anchor:middle}' +
+    '.chart-title{fill:#999;font:600 13px ' + MONO + ';text-anchor:middle}' +
     '</style>';
 
   function svgWrap(inner) {
