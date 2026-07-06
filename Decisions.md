@@ -510,3 +510,60 @@ touching CSS that costs nothing to keep.
 ## Cache-buster
 
 Bumped to `?v=0.5.3` in both HTML files (see #23; bump every release).
+
+---
+
+# v0.5.4 decisions
+
+Assignment `work-assignment/v0.5.4.txt`: four items — remove the alternating row colors, default
+the time to now, tighten/relabel the planetary table for mobile, shrink the chart-format chips
+onto one line.
+
+## 44. Alternate-row shading removed everywhere (item 1; reverses #31/#39 and part of #40)
+
+**Decision:** all zebra-striping rules are deleted: `dl.values dt/dd:nth-of-type(even)`
+(Details, v0.5.3 #40) and `table.planets tbody tr:nth-child(even)` (both the desktop and the
+mobile card layout, v0.5.0 #31 / v0.5.2 #39). Left in place (not "alternating row" striping,
+so out of scope): the `.karaka` badge background, `.combo-list li.active`, and
+`button.secondary:hover` — these are single-state accents/badges, not a repeating zebra
+pattern.
+
+## 45. Birth time defaults to the current local time (item 2)
+
+**Decision:** `populateTime()` in `js/app.js` now sets the Hour/Minute dropdowns to
+`new Date().getHours()`/`getMinutes()`, mirroring the date dropdowns' existing "defaults to
+today" behavior (v0.5.2 #38) so the whole form opens pre-filled with "now."
+
+## 46. Planetary table: no abbreviations, no-space position, D1/D9 headers, wider 3rd column (item 3)
+
+**Decision, four linked changes to `js/result.js` + `js/pdf.js` + `css/styles.css`:**
+- **Planet column** shows the plain name only; retrograde is a bare `(R)` suffix with no
+  space (`Mercury(R)`, not `Mercury (Me)`). The `GRAHA_ABBR`/`label` machinery is untouched
+  (still used by the charts, which keep their own abbreviation convention) — only the table's
+  own rendering changed. The Lagna row drops its "As" abbreviation too, for the same reason
+  (it's a plain-name row now, like every graha row).
+- **Position string** drops all internal spaces: `fmtPos` now returns `17Cn12'21"` instead of
+  `17 Cn 12' 21"`, in both `result.js` and `pdf.js`.
+- **Headers renamed** "Rasi"/"Navamsa" → **"D1"/"D9"** (shorter, and arguably clearer — they're
+  the divisional-chart numbers) in the desktop `<thead>`, the mobile card's `::before` labels,
+  and the PDF column headers. The chart figure captions ("D1 · Rasi", "D9 · Navamsa") are
+  unrelated (chart labels, not table headers) and were left alone.
+- **Mobile column widths retuned:** columns 1–2 (name, position) shrank from `13ch 14ch` to
+  `10ch 11ch` now that their content is shorter, handing the freed space to column 3 (`1fr`) —
+  which is what actually needed to grow, since it carries the nakshatra name *and* the karaka
+  abbreviation/name. Measured via Playwright: column 3 grew from ~88px to ~129px on a 390px
+  viewport.
+
+## 47. Chart-format chips shrunk to fit one line (item 4)
+
+**Decision:** `.chart-style-btn` font dropped `0.85rem → 0.68rem` with tighter padding
+(`6px 14px → 5px 9px`), and `.chart-switcher` changed from `flex-wrap: wrap` to
+`flex-wrap: nowrap` + `overflow-x: auto` — the wrap is now structurally impossible (all three
+buttons must share one row), and the scroll is a safety net for any device narrower than
+what was tested, rather than a silent wrap to a second line. Verified on a 390px viewport:
+`chart-switcher.scrollWidth === clientWidth` (no overflow) and all three buttons' bounding
+boxes share the same `top` (one row).
+
+## Cache-buster
+
+Bumped to `?v=0.5.4` in both HTML files (see #23; bump every release).
