@@ -22,7 +22,9 @@ follow this loop:
      file (by version, e.g. `v0.2.0.txt`) is usually this session's assignment.
 2. **Branch.** Create a new git branch for the session, named after the assignment file
    (e.g. assignment `v0.2.0.txt` → branch `v0.2.0`). Base it on the previous version's
-   branch (the latest work), not necessarily `main`.
+   branch (the latest work), not necessarily `main`. **Commit the assignment text itself**
+   (`work-assignment/<version>.txt`) to git as part of the session, so the branch records
+   what it was asked to do.
 3. **Decide autonomously.** No human is available. When a choice comes up, take the best
    decision you can for that moment and **record it in `Decisions.md`** (numbered, with the
    reasoning and any accuracy/scope trade-off) so it can be reviewed later. Never block

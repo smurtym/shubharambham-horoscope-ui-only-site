@@ -1,0 +1,8 @@
+This is a reseach story, not any changes.
+
+I am not sure what will be accuracy of Moshier for years 1950 - 2100 for moon. It says 0.1 arc minute. But still not convinced. I feel that is more than that.
+
+Aim of this task is to get a best plan to calculate the min and max accuracy of Moshier ephemeris (not implement the plan). May be there can be multiple plans to do that.
+
+Your task is find out all of them and provide in work log. Provide detailed report in your work log.
+
