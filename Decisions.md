@@ -567,3 +567,72 @@ boxes share the same `top` (one row).
 ## Cache-buster
 
 Bumped to `?v=0.5.4` in both HTML files (see #23; bump every release).
+
+---
+
+# v0.5.5 decisions
+
+Assignment `work-assignment/v0.5.5.txt`: four items — zero-pad the degree in a position
+string, color the sign abbreviation within it, rename "Lagna" to "Ascendent", and suffix
+"Mahadasa" onto each maha-dasha's lord in its heading.
+
+## 48. Degree zero-padded to 2 digits (item 1)
+
+**Decision:** `fmtPos` in both `js/result.js` and `js/pdf.js` now runs the degree through
+the same `pad2()` helper already used for minutes/seconds/dates, so `2Pi45'23"` reads
+`02Pi45'23"` — degree is always exactly 2 digits (0–29 in Jyotish, so this never needs a
+3rd digit). Applies everywhere a position is printed: the on-screen planetary table (incl.
+the mobile card layout, which reuses the same `fmtPos`) and the PDF table.
+
+## 49. Sign abbreviation colored via a new `--rasi` teal (item 2)
+
+**Decision:** added a fourth accent variable, `--rasi: #2f6f7a` (teal), to
+`css/styles.css` — distinct from `--accent` (ochre, links/buttons/karaka pill) and
+`--lagna` (red, already repurposed as a general "highlight" color for required-field
+markers and the retrograde `(R)` suffix). A new `.rasi` span wraps just the sign
+abbreviation inside the position string. On-screen, `fmtPos` now returns HTML
+(`02<span class="rasi">Pi</span>45'23"`) instead of a plain string — callers must not
+`esc()` the result anymore (the sign abbreviation itself is still escaped internally,
+though in practice it's always plain ASCII). In the PDF, jsPDF has no rich-text runs, so
+`fmtPos` was replaced with `drawPos(doc, g, x, y)`, which draws the degree, sign, and
+tail as three separate `doc.text()` calls with `setTextColor` switched in between and
+`doc.getTextWidth()` used to advance `x` — same visual result, achieved differently
+because the renderer is different. Verified the color actually differs from body text:
+`.rasi` computed color `rgb(47, 111, 122)` vs. table-cell ink `rgb(35, 32, 27)`.
+
+## 50. "Lagna" renamed to "Ascendent" (item 3)
+
+**Decision:** every on-screen/PDF label reading "Lagna" is changed to "Ascendent" — the
+Details card row and the planetary table's first row, in both `js/result.js` and
+`js/pdf.js`. Kept the assignment's literal spelling ("Ascendent", not the dictionary
+"Ascendant") since it was written that way twice in the assignment text, and a UI label
+has no functional dependents to break by picking one spelling over the other. Variable/
+comment names referring to the ascendant (`a`, `ascendant`, `.ascendant`) are internal and
+were left alone — only user-facing strings changed. Checked the mobile table's fixed
+`10ch` name column (v0.5.4 #46) still fits: "Ascendent" is 9 characters.
+
+## 51. Mahadasha heading suffixed "Mahadasa" (item 4)
+
+**Decision:** the maha-dasha summary line's lord — `md.lord` in `js/result.js`
+(`renderDasha`) and `js/pdf.js` — now reads e.g. "Moon Mahadasa" instead of bare "Moon".
+Scoped to the maha-dasha heading only, per the assignment's literal example; the nested
+antardasha rows (`ad.lord`) keep their bare planet names, since the assignment only
+mentioned the "heading of mahadasa".
+
+## Verification
+
+Playwright E2E through the real `index.html` form → `result.html`, both desktop (1200px)
+and mobile (390px) viewports, plus a downloaded PDF rasterized with `pdftoppm`:
+- Positions read `05Ge26'51"`, `00Ta19'10"` (leading zero on single-digit degrees) across
+  every row, ascendant and all nine grahas, on-screen and in the PDF.
+- The sign abbreviation (`Ge`, `Ta`, ...) renders in the new teal in every row; PDF sampled
+  visually, on-screen computed style confirmed programmatically.
+- "Ascendent" appears in the Details card, the desktop table, the mobile card, and the PDF
+  — no "Lagna" left anywhere in output.
+- All nine `.md-lord` values read "`<Planet> Mahadasa`" on-screen; PDF page 2 shows the
+  same text for every maha-dasha block.
+- Zero console/page errors in either viewport.
+
+## Cache-buster
+
+Bumped to `?v=0.5.5` in both HTML files (see #23; bump every release).
