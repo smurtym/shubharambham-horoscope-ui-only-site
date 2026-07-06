@@ -456,3 +456,57 @@ Zebra striping and "no horizontal scroll" are retained.
 ## Cache-buster
 
 Bumped to `?v=0.5.2` in both HTML files (see #23; bump every release).
+
+---
+
+# v0.5.3 decisions
+
+Assignment `work-assignment/v0.5.3.txt`: five items — smaller Details font, Details as
+alternating two-line rows (mobile only), dasha start from birth, planetary-table column
+alignment on mobile, remove print.
+
+## 40. Details: mobile-only stacked rows with alternating shading (items 1,2)
+
+**Decision:** desktop's `dl.values` (side-by-side grid) is untouched — the assignment said
+desktop already looks good. At `≤560px` only, `dl.values` switches to `display: block`,
+each `dt`/`dd` becomes its own block line (label, then value, matching the requested "Sun
+sign — Vedic (sidereal)" / "Gemini" two-line example), font drops to `0.85rem`, and every
+other **pair** (`dt:nth-of-type(even)` + `dd:nth-of-type(even)`) gets the `--accent-soft`
+tint. This works because `dt`/`dd` always alternate 1:1, so `:nth-of-type(even)` on each
+tag lands on the same logical row pair.
+
+## 41. First maha dasha's own start date clamped to birth (item 3; extends #37)
+
+**Decision:** v0.5.2 #37 only trimmed the **antardashas** of the running (balance) maha
+dasha to start at birth, leaving the maha-dasha summary's own `start` at its true pre-birth
+value (e.g. "24 May 1989" for a MD that actually began before birth). This session's item 3
+asks for the **maha dasha's** displayed start to also read from birth — exactly the
+follow-up the v0.5.2 handoff anticipated ("if a future ask wants the MD itself to start at
+birth… change the summary too"). `Jyotish.vimshottari` now clamps
+`mahadashas[0].start = birthDate` when it precedes birth. `end` and the nominal `years`
+label are left as-is (literal reading: only the *starting date* was asked to change).
+Verified headlessly: for the 1990-05-15 08:30 IST test chart, MD0 (Sun) now shows
+"15 May 1990 – 25 May 1995", matching the birth date exactly; the full 120-year span from
+the true (unclamped) balance-start is unchanged and antardashas stay monotonic.
+
+## 42. Planetary table: fixed `ch`-width mobile columns instead of `auto` (item 4)
+
+**Decision:** each planet card in the ≤560px table is its own CSS Grid container
+(`display: grid` per `<tr>`), so `auto`-sized columns were sized independently per row —
+"Jupiter"'s wider name column made column 1 wider in that row than in the "Sun" row, so
+nothing lined up vertically down the page. Changed `grid-template-columns` from
+`auto auto 1fr` to fixed `13ch 14ch 1fr` (monospace, so `ch` is exact), which forces every
+row's grid to use identical track widths regardless of that row's content — verified via
+Playwright (`getComputedStyle` on every `<tr>` returns the same three pixel widths).
+
+## 43. Print removed (item 5)
+
+**Decision:** the `#print-btn` (and its `window.print()` handler) is deleted from
+`result.html`/`result.js`. The `@media print` stylesheet and the `.no-print` class are left
+in place — they're a defensive fallback for a user invoking the browser's native Ctrl+P,
+not an "option" the site offers, so removing the button satisfies the request without
+touching CSS that costs nothing to keep.
+
+## Cache-buster
+
+Bumped to `?v=0.5.3` in both HTML files (see #23; bump every release).
