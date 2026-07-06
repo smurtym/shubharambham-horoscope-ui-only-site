@@ -1,0 +1,10 @@
+
+1. Change formatting of planet Position
+Degrees should be in 2 digit always (add 0 before if needed)
+2Pi45'23" -> should be -> 02Pi45'23"
+
+2. Change color of rasi in degrees. In 02Pi45'23", Pi should be in different colors
+
+3. Change name of Lagna to Ascendent in Planetary Positions
+
+4. In heading of mahadasa, suffix the word "Mahadasa". Instead of Moon, write Moon Mahadasa
