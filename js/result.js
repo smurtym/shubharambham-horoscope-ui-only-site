@@ -289,10 +289,6 @@
   // Actions
   // -------------------------------------------------------------------------
   function wireActions(model) {
-    document.getElementById("print-btn").addEventListener("click", function () {
-      window.print();
-    });
-
     document.getElementById("share-btn").addEventListener("click", function () {
       var url = window.location.href;
       if (navigator.share) {

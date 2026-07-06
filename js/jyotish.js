@@ -239,13 +239,15 @@
 
     // The first maha dasha is the running (balance) dasha, so it began before birth. Drop the
     // antardashas that finished before birth and start the running one at the birth instant,
-    // so the timeline begins at birth (v0.5.2 item 3).
+    // so the timeline begins at birth (v0.5.2 item 3). The maha dasha's own displayed start is
+    // now also clamped to birth (v0.5.3 item 3), so the whole dasha timeline reads from birth.
     var bt = birthDate.getTime();
     var first = mahadashas[0];
     first.antars = first.antars.filter(function (ad) { return ad.end.getTime() > bt; });
     if (first.antars.length && first.antars[0].start.getTime() < bt) {
       first.antars[0].start = new Date(bt);
     }
+    if (first.start.getTime() < bt) first.start = new Date(bt);
 
     return { balanceStart: mdStartDate, mahadashas: mahadashas };
   }

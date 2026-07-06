@@ -226,6 +226,25 @@ dl.values {
 dl.values dt { color: var(--ink-soft); }
 dl.values dd { margin: 0; font-weight: 600; }
 
+/* On narrow screens, Details becomes stacked two-line rows (label, then value) with
+   alternating shading instead of the desktop side-by-side columns (v0.5.3 items 1,2). Desktop
+   is left unchanged. */
+@media (max-width: 560px) {
+  dl.values {
+    display: block;
+    font-size: 0.85rem;
+  }
+  dl.values dt, dl.values dd {
+    display: block;
+    margin: 0;
+    padding: 5px 8px 0;
+  }
+  dl.values dd { padding-top: 1px; padding-bottom: 5px; }
+  dl.values dt:nth-of-type(even), dl.values dd:nth-of-type(even) {
+    background: var(--accent-soft);
+  }
+}
+
 /* Charts */
 .chart-switcher { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
 .chart-style-btn {
@@ -306,7 +325,11 @@ table.planets .abbr { color: var(--ink-soft); font-weight: 400; }
   table.planets thead { display: none; }
   table.planets tbody tr {
     display: grid;
-    grid-template-columns: auto auto 1fr;
+    /* Fixed (not content-based) column widths: each <tr> is its own grid formatting
+       context, so "auto" sizes independently per row and columns drift out of alignment
+       row to row. Fixed ch widths (monospace) keep every row's columns identical, so
+       name/position/nakshatra/rasi/navamsa/karaka all line up vertically (v0.5.3 item 4). */
+    grid-template-columns: 13ch 14ch 1fr;
     grid-template-areas: "nm pos nak" "ras nav kar";
     gap: 2px 10px;
     border: 1px solid var(--line);
