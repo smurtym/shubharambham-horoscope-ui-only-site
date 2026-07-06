@@ -287,3 +287,48 @@ and the dasha output is unchanged.
 the **actual computed motion** (speed < 0) rather than being forced true; the true node turns
 direct near its stations (e.g. 2000-01-08, speed +0.003°/day → shown direct). The planetary
 table legend no longer claims "Rahu and Ketu are always retrograde."
+
+---
+
+# v0.4.2 decisions (details / header / date-picker refinements)
+
+Assignment `work-assignment/v0.4.2.txt`: eight refinements.
+
+## 25. Fixed-sign charts show HOUSE numbers, not rasi numbers (item 1; supersedes #20)
+
+**Decision:** South and East Indian charts now label each cell with the **house (bhava)
+number counted from the lagna** (1 = ascendant sign), not the fixed rasi number. This matches
+the original v0.4.0 item-4 intent ("South and East … house numbers"), which #20 had
+implemented as rasi numbers. Applied to **both** South and East (the v0.4.2 note flagged East,
+but the same rule is correct for South); `charts.js` gained `houseNum(sign, ascSign)`.
+
+## 26. Birth date via DD/MM/YYYY dropdowns (item 2)
+
+**Decision:** the date is entered with three **dropdowns** (Day / Month / Year, dd/mm/yyyy
+order) — consistent with the time dropdowns and unambiguously dd/mm/yyyy, which the plain
+`type="date"` picker cannot guarantee across locales. Year range is **1900–2030** (covers
+realistic birth dates; widen in `app.js` `populateDate` if ever needed). The "Format:
+dd/mm/yyyy" hint was removed.
+
+## 27. Only the "As" token is coloured in charts (item 3)
+
+**Decision:** each label in a chart cell is now its own `<tspan>`; only the `As` tspan carries
+the `has-lagna` (red) class, so a graha sharing the ascendant cell keeps the normal colour.
+Previously the whole `<text>` row was coloured, turning co-located planets red too.
+
+## 28. "Details" card restructured; Lagna added to the table (items 4,5,6,7,8)
+
+**Decision:**
+- The "Computed values" card is renamed **"Details"** (item 6).
+- The birth date/time/place line under the page title is removed; **Gender, Date of birth,
+  Time of birth, Place of birth** are shown as rows in Details instead (item 8).
+- **Moon sign** shows only the sign (the nakshatra already has its own row) (item 7).
+- **Lagna** in Details shows only the sign name; the full degrees now live in a new **Lagna
+  (ascendant) row at the top of the planetary-positions table** (item 5).
+- The "(Ju) = retrograde" legend under the table is removed (item 4).
+
+These changes are mirrored in the PDF (`pdf.js`) so the download matches the page.
+
+## Cache-buster
+
+Bumped to `?v=0.4.2` in both HTML files (see #23; bump every release).

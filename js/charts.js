@@ -22,20 +22,25 @@
   }
 
   // Render planet labels centred at (cx,cy), wrapping to at most `perLine` per row.
+  // Only the "As" (ascendant) token is coloured — each label is its own <tspan> so a graha
+  // sharing the ascendant cell keeps the normal colour (v0.4.2 item 3).
   function labelBlock(labels, cx, cy, perLine) {
     if (!labels || !labels.length) return "";
     perLine = perLine || 3;
     var rows = [];
     for (var i = 0; i < labels.length; i += perLine) {
-      rows.push(labels.slice(i, i + perLine).join(" "));
+      rows.push(labels.slice(i, i + perLine));
     }
     var lh = 13;
     var startY = cy - ((rows.length - 1) * lh) / 2;
     var out = "";
     for (var r = 0; r < rows.length; r++) {
-      var cls = / As( |$)/.test(" " + rows[r] + " ") ? " has-lagna" : "";
-      out += '<text class="planet' + cls + '" x="' + cx + '" y="' +
-        (startY + r * lh) + '">' + esc(rows[r]) + '</text>';
+      var spans = rows[r].map(function (tok) {
+        var cls = tok === "As" ? ' class="has-lagna"' : '';
+        return '<tspan' + cls + '>' + esc(tok) + '</tspan>';
+      }).join(" ");
+      out += '<text class="planet" x="' + cx + '" y="' + (startY + r * lh) + '">' +
+        spans + '</text>';
     }
     return out;
   }
@@ -49,6 +54,12 @@
     var arr = (placements[sign] || []).slice();
     if (sign === ascSign) arr.unshift("As");
     return arr;
+  }
+
+  // House (bhava) number of a fixed sign, counted from the ascendant sign (1 = lagna).
+  // Fixed-sign charts (South/East) are labelled with the house number (v0.4.2 item 1).
+  function houseNum(sign, ascSign) {
+    return ((sign - ascSign + 12) % 12) + 1;
   }
 
   // ---- South Indian: fixed 4×4 grid, open centre --------------------------
@@ -71,10 +82,10 @@
     for (var s = 0; s < 12; s++) {
       var rc = SOUTH_CELL[s];
       var x = rc[1] * c, y = rc[0] * c;
-      // Fixed-sign charts (South/East) carry the rasi *number* (1..12); the sign is fixed
-      // to the cell so the number, not an abbreviation, is the conventional label (item 4).
+      // Fixed-sign charts (South/East) carry the *house* number (1..12) counted from the
+      // lagna (v0.4.2 item 1), so the reader sees which bhava each fixed sign is.
       cells += '<text class="sign" x="' + (x + 6) + '" y="' + (y + 15) + '">' +
-        (s + 1) + '</text>';
+        houseNum(s, ascSign) + '</text>';
       cells += labelBlock(labelsFor(placements, s, ascSign), x + c / 2, y + c / 2 + 4, 3);
     }
     var caption = '<text class="chart-title" x="180" y="185">' + esc(title || "") + '</text>';
@@ -135,7 +146,7 @@
     for (var i = 0; i < EAST_CELLS.length; i++) {
       var e = EAST_CELLS[i], s = e[0];
       body += '<text class="sign" x="' + e[1] + '" y="' + (e[2] - 16) + '">' +
-        (s + 1) + '</text>';
+        houseNum(s, ascSign) + '</text>';
       body += labelBlock(labelsFor(placements, s, ascSign), e[1], e[2] + 4, 2);
     }
     var caption = '<text class="chart-title" x="180" y="185">' + esc(title || "") + '</text>';
@@ -152,7 +163,7 @@
     'line{stroke:#3a3a3a;stroke-width:1.3}' +
     '.sign{fill:#b8791f;font:600 11px ' + MONO + ';text-anchor:start}' +
     '.planet{fill:#1a1a1a;font:600 12px ' + MONO + ';text-anchor:middle}' +
-    '.planet.has-lagna{fill:#b23b3b}' +
+    '.has-lagna{fill:#b23b3b}' +
     '.chart-title{fill:#999;font:600 13px ' + MONO + ';text-anchor:middle}' +
     '</style>';
 

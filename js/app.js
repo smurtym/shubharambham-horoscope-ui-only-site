@@ -46,13 +46,38 @@
     }
   }
 
-  // Parse a dd/mm/yyyy string into {y,mo,d} with real-calendar validation, or null.
-  function parseDmy(s) {
-    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((s || "").trim());
-    if (!m) return null;
-    var d = +m[1], mo = +m[2], y = +m[3];
-    if (mo < 1 || mo > 12 || d < 1 || d > 31 || y < 1 || y > 9999) return null;
-    // Reject impossible dates (e.g. 31/02) by round-tripping through Date.
+  var MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+    "Nov", "Dec"];
+
+  // Populate the Day/Month/Year dropdowns (dd/mm/yyyy order). Years run 2030→1900, which
+  // covers realistic birth dates; extend the range here if ever needed (v0.4.2 item 2).
+  function populateDate() {
+    var daySel = byId("day");
+    for (var d = 1; d <= 31; d++) {
+      var od = document.createElement("option");
+      od.value = String(d); od.textContent = pad(d);
+      daySel.appendChild(od);
+    }
+    var monSel = byId("month");
+    for (var mo = 1; mo <= 12; mo++) {
+      var om = document.createElement("option");
+      om.value = String(mo); om.textContent = pad(mo) + " (" + MONTH_ABBR[mo - 1] + ")";
+      monSel.appendChild(om);
+    }
+    var yearSel = byId("year");
+    for (var y = 2030; y >= 1900; y--) {
+      var oy = document.createElement("option");
+      oy.value = String(y); oy.textContent = String(y);
+      yearSel.appendChild(oy);
+    }
+  }
+
+  // Read the Day/Month/Year dropdowns into {y,mo,d} with real-calendar validation, or null.
+  function readDate() {
+    var d = byId("day").value, mo = byId("month").value, y = byId("year").value;
+    if (d === "" || mo === "" || y === "") return null;
+    d = +d; mo = +mo; y = +y;
+    // Reject impossible dates (e.g. 31 Feb) by round-tripping through Date.
     var probe = new Date(Date.UTC(y, mo - 1, d));
     if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== mo - 1 ||
       probe.getUTCDate() !== d) return null;
@@ -69,12 +94,12 @@
     e.preventDefault();
     byId("form-error").hidden = true;
 
-    var dmy = parseDmy(byId("date").value);        // dd/mm/yyyy
+    var dmy = readDate();                           // {y,mo,d} from the dropdowns
     var hour = byId("hour").value;
     var minute = byId("minute").value;
     var placeId = byId("place").value;
 
-    if (!dmy) return showError("Please enter the birth date as dd/mm/yyyy (e.g. 15/05/1990).");
+    if (!dmy) return showError("Please select a valid birth date (day, month and year).");
     if (hour === "" || minute === "") return showError("Please select the birth hour and minute.");
     if (!placeId) return showError("Please select the birth place.");
 
@@ -101,6 +126,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     populatePlaces();
+    populateDate();
     populateTime();
     byId("birth-form").addEventListener("submit", onSubmit);
   });

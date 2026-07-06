@@ -98,29 +98,27 @@
   // -------------------------------------------------------------------------
   function renderHeader(model, content) {
     var name = model.person.Name;
-    document.title = name ? name + "'s Horoscope" : "Horoscope";
-
+    var titleText = name ? name + "'s Horoscope" : "Horoscope";
+    document.title = titleText;
+    // The birth date/time/place line was moved into the Details card (v0.4.2 item 8).
     var header = el("header", "result-header");
-    header.appendChild(el("h1", null, esc(name ? name + "'s Horoscope" : "Horoscope")));
-
-    var p = model.person, place = model.place;
-    var c = window.Common.parseLocalIso(p.DateTime);
-    var timeStr = pad2(c.hour) + ":" + pad2(c.minute) +
-      (c.second ? ":" + pad2(c.second) : "");
-    var dateStr = pad2(c.day) + " " + MONTHS[c.month - 1] + " " + c.year;
-
-    var bits = [];
-    if (p.Gender) bits.push(esc(p.Gender));
-    bits.push("Born " + dateStr + " at " + timeStr);
-    bits.push(esc(place.city) + ", " + esc(place.region));
-    header.appendChild(el("p", "birth-summary", bits.join(" &nbsp;·&nbsp; ")));
+    header.appendChild(el("h1", null, esc(titleText)));
     content.appendChild(header);
   }
 
   function renderComputed(model, content) {
     var g = model.chart.grahas, a = model.chart.ascendant, place = model.place;
     var SIGN = window.Jyotish.SIGN_NAME;
-    var rows = [
+    var c = window.Common.parseLocalIso(model.person.DateTime);
+    var dateStr = pad2(c.day) + " " + MONTHS[c.month - 1] + " " + c.year;
+    var timeStr = pad2(c.hour) + ":" + pad2(c.minute);
+    var rows = [];
+    if (model.person.Gender) rows.push(["Gender", esc(model.person.Gender)]);
+    rows.push(
+      // Birth particulars, moved here from the page header (item 8).
+      ["Date of birth", dateStr],
+      ["Time of birth", timeStr],
+      ["Place of birth", esc(place.city) + ", " + esc(place.region)],
       ["Latitude", place.lat.toFixed(4) + "°"],
       ["Longitude", place.long.toFixed(4) + "°"],
       ["Timezone", esc(place.tz)],
@@ -128,12 +126,13 @@
       ["Nakshatra", esc(g.Moon.nakshatra) + " (pada " + g.Moon.pada + ")"],
       ["Sun sign — Vedic (sidereal)", esc(g.Sun.signName)],
       ["Sun sign — Western (tropical)", esc(SIGN[model.westernSign])],
-      ["Moon sign", esc(g.Moon.signName) + " · " + esc(g.Moon.nakshatra) +
-        " pada " + g.Moon.pada],
-      ["Lagna (ascendant)", esc(a.signName) + " " + fmtPos(a)]
-    ];
+      // Moon sign only — the nakshatra already has its own row (item 7).
+      ["Moon sign", esc(g.Moon.signName)],
+      // Lagna as the sign name only; the degrees live in the planetary table (item 5).
+      ["Lagna", esc(a.signName)]
+    );
     var section = el("section", "card");
-    section.appendChild(el("h2", null, "Computed values"));
+    section.appendChild(el("h2", null, "Details"));
     var dl = el("dl", "values");
     rows.forEach(function (r) {
       dl.appendChild(el("dt", null, r[0]));
@@ -215,6 +214,17 @@
       "<th>Rasi</th><th>Navamsa</th><th>Karaka</th>" +
       "</tr></thead>";
     var tbody = el("tbody");
+    // Lagna (ascendant) as the first row — same columns as a graha, no karaka (item 5).
+    var a = model.chart.ascendant;
+    var lagnaTr = el("tr");
+    lagnaTr.innerHTML =
+      "<td class=\"pl\">Lagna <span class=\"abbr\">As</span></td>" +
+      "<td>" + esc(fmtPos(a)) + "</td>" +
+      "<td>" + esc(a.nakshatra) + " " + a.pada + "</td>" +
+      "<td>" + esc(a.signAbbr) + "</td>" +
+      "<td>" + esc(a.navamsaAbbr) + "</td>" +
+      "<td>—</td>";
+    tbody.appendChild(lagnaTr);
     var PLANET_NAME = {
       Sun: "Sun", Moon: "Moon", Mars: "Mars", Mercury: "Mercury", Jupiter: "Jupiter",
       Venus: "Venus", Saturn: "Saturn", Rahu: "Rahu", Ketu: "Ketu"
@@ -239,9 +249,6 @@
     table.appendChild(tbody);
     wrap.appendChild(table);
     section.appendChild(wrap);
-    section.appendChild(el("p", "note",
-      "A graha shown in parentheses — e.g. <span class=\"abbr retro\">(Ju)</span> — is " +
-      "retrograde (vakri)."));
     content.appendChild(section);
   }
 

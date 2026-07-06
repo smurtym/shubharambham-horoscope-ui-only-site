@@ -57,34 +57,37 @@
       if (y + space > PAGE_H - MARGIN - 20) { doc.addPage(); y = MARGIN; }
     }
 
-    // --- Title & birth summary ---
+    // --- Title ---
     var name = model.person.Name;
     doc.setFont("courier", "bold").setFontSize(18).setTextColor(30);
     doc.text(name ? name + "'s Horoscope" : "Horoscope", MARGIN, y);
-    y += 22;
+    y += 24;
 
+    // --- Details (birth particulars + computed values; item 8 folds the born/place line
+    //     that used to sit under the title into this block) ---
     var c = global.Common.parseLocalIso(model.person.DateTime);
-    var timeStr = pad2(c.hour) + ":" + pad2(c.minute) + (c.second ? ":" + pad2(c.second) : "");
-    var line1 = (model.person.Gender ? model.person.Gender + "  ·  " : "") +
-      "Born " + pad2(c.day) + " " + MONTHS[c.month - 1] + " " + c.year + " at " + timeStr;
-    var line2 = model.place.city + ", " + model.place.region +
-      "  ·  " + model.place.lat.toFixed(4) + "°, " + model.place.long.toFixed(4) + "°  ·  " +
-      model.place.tz;
-    doc.setFont("courier", "normal").setFontSize(10).setTextColor(90);
-    doc.text(line1, MARGIN, y); y += 14;
-    doc.text(line2, MARGIN, y); y += 22;
-
-    // --- Computed values ---
+    var dateStr = pad2(c.day) + " " + MONTHS[c.month - 1] + " " + c.year;
+    var timeStr = pad2(c.hour) + ":" + pad2(c.minute);
     var g = model.chart.grahas, a = model.chart.ascendant;
     var SIGN = global.Jyotish.SIGN_NAME;
-    var values = [
+    var values = [];
+    if (model.person.Gender) values.push(["Gender", model.person.Gender]);
+    values.push(
+      ["Date of birth", dateStr],
+      ["Time of birth", timeStr],
+      ["Place of birth", model.place.city + ", " + model.place.region],
+      ["Latitude", model.place.lat.toFixed(4) + "°"],
+      ["Longitude", model.place.long.toFixed(4) + "°"],
+      ["Timezone", model.place.tz],
       ["Tithi", model.tithi.displayFull],
       ["Nakshatra", g.Moon.nakshatra + " (pada " + g.Moon.pada + ")"],
       ["Sun — Vedic (sidereal)", g.Sun.signName],
       ["Sun — Western (tropical)", SIGN[model.westernSign]],
-      ["Moon sign", g.Moon.signName + " · " + g.Moon.nakshatra + " pada " + g.Moon.pada],
-      ["Lagna (ascendant)", a.signName + " " + fmtPos(a)]
-    ];
+      ["Moon sign", g.Moon.signName],             // no nakshatra (item 7)
+      ["Lagna", a.signName]                        // name only (item 5)
+    );
+    doc.setFont("courier", "bold").setFontSize(11).setTextColor(60);
+    doc.text("Details", MARGIN, y); y += 14;
     doc.setDrawColor(210).setLineWidth(0.5);
     doc.line(MARGIN, y, PAGE_W - MARGIN, y); y += 16;
     doc.setFontSize(10);
@@ -93,7 +96,7 @@
       doc.setFont("courier", "bold").setTextColor(60);
       doc.text(row[0] + ":", MARGIN, y);
       doc.setFont("courier", "normal").setTextColor(30);
-      doc.text(String(row[1]), MARGIN + 150, y);
+      doc.text(String(row[1]), MARGIN + 180, y);
       y += 16;
     });
     y += 8;
@@ -144,6 +147,11 @@
       y += 4;
       doc.setDrawColor(210); doc.line(MARGIN, y, PAGE_W - MARGIN, y); y += 12;
       doc.setFont("courier", "normal").setTextColor(30);
+      // Lagna (ascendant) first, then the grahas (item 5).
+      ensure(16);
+      ["Lagna As", fmtPos(a), a.nakshatra + " " + a.pada, a.signAbbr, a.navamsaAbbr, "—"]
+        .forEach(function (txt, i) { doc.text(String(txt), cols[i].x, y); });
+      y += 15;
       model.chart.order.forEach(function (nm) {
         ensure(16);
         var gr = model.chart.grahas[nm];
