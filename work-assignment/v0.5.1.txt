@@ -1,0 +1,7 @@
+Search city is broken in desktop. In iphone it is showing as keyboard suggestions. This is completely not usable now.
+
+Can you make date selector as actual date selector instead of selecting date, month, and year. I want in dd mm yyyy format only to show after entering
+
+Also allow dates from 1950 - 2100. Open date selector with current date 
+
+House markers in North East Indian charts are showing in middle, taking space, not allowing other planets to have space to show. South Indian is good (House markers are top left)
