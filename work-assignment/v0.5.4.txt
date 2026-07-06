@@ -1,0 +1,9 @@
+
+
+1. Alternate colors does not look great, remove everywhere.
+
+2. Time also should be defaulted to current local time.
+
+3. In Planetary Positions 3rd column should be bigger as it contains nakshatras name and karaka name abbreviation and karaka name. Also you can remove space between degrees 17 Cn 12' 21" can be written as 17Cn12'21". Also planet name can be just name, no abbreviation. If that is retrograde, just add (R) without space. For example, instead of Mercury (Me), you can write Mercury(R). This will get 2 more character space. Instead of Rasi and Navamsa, you can just write D1, D9 in heading, this will reduce space further.
+
+4. Font inside Chart style chips should be reduced further, I need all 3 chips/buttons to be in single line.
