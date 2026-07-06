@@ -157,12 +157,13 @@
     { lord: "Jupiter", years: 16 }, { lord: "Saturn", years: 19 }, { lord: "Mercury", years: 17 }
   ];
   // Mean length of a Vimshottari "year". A dasha year is one full revolution of the Sun in
-  // sidereal longitude (360°), i.e. a sidereal year — used only as the initial guess and as
-  // the fallback when no live Sun ephemeris is supplied. See Decisions.md #17.
-  var SIDEREAL_YEAR_DAYS = 365.256363;
+  // TROPICAL longitude (360°), i.e. a tropical year, matching JHora (see Decisions.md #36;
+  // this superseded the earlier sidereal-year choice). Used only as the Newton seed and as
+  // the fallback when no live Sun ephemeris is supplied.
+  var TROPICAL_YEAR_DAYS = 365.24219;
 
   function addYears(date, years) {
-    return new Date(date.getTime() + years * SIDEREAL_YEAR_DAYS * 86400000);
+    return new Date(date.getTime() + years * TROPICAL_YEAR_DAYS * 86400000);
   }
 
   // Signed smallest angular difference, in (−180, 180].
@@ -171,12 +172,12 @@
     return x > 180 ? x - 360 : x;
   }
 
-  // birthDate: JS Date; moonLonSid: sidereal Moon longitude (deg).
-  // opts.sunLonAt(date) -> sidereal Sun longitude (deg) at that instant, and
-  // opts.sunLon0        -> sidereal Sun longitude at birth. When supplied, dasha boundaries
-  // are placed at the instants the Sun's sidereal longitude has advanced by (age·360°),
-  // i.e. the periods are measured by the Earth's actual revolution round the Sun rather than
-  // by fixed-length calendar years (item 8). Without them it falls back to mean years.
+  // birthDate: JS Date; moonLonSid: sidereal Moon longitude (deg, drives the nakshatra/lord).
+  // opts.sunLonAt(date) -> TROPICAL Sun longitude (deg) at that instant, and
+  // opts.sunLon0        -> TROPICAL Sun longitude at birth. When supplied, dasha boundaries
+  // are placed at the instants the Sun's tropical longitude has advanced by (age·360°), i.e.
+  // the periods are measured by the Earth's actual revolution round the Sun (360° tropical =
+  // one dasha-year, per JHora — item 4). Without them it falls back to mean years.
   function vimshottari(birthDate, moonLonSid, opts) {
     opts = opts || {};
     var sunLonAt = opts.sunLonAt;
@@ -191,7 +192,7 @@
     // Dasha-years already elapsed (within the first Maha Dasha) at the moment of birth.
     var elapsed = fraction * firstYears;
 
-    var YEAR_MS = SIDEREAL_YEAR_DAYS * 86400000;
+    var YEAR_MS = TROPICAL_YEAR_DAYS * 86400000;
     var speedPerMs = 360 / YEAR_MS; // mean solar angular speed, used as the Newton slope.
 
     // Map a dasha-age A (years since the first Maha Dasha began) to a calendar Date.
@@ -235,6 +236,17 @@
         years: md.years, antars: antars });
       mdStartAge += md.years; prevDate = aStartDate;
     }
+
+    // The first maha dasha is the running (balance) dasha, so it began before birth. Drop the
+    // antardashas that finished before birth and start the running one at the birth instant,
+    // so the timeline begins at birth (v0.5.2 item 3).
+    var bt = birthDate.getTime();
+    var first = mahadashas[0];
+    first.antars = first.antars.filter(function (ad) { return ad.end.getTime() > bt; });
+    if (first.antars.length && first.antars[0].start.getTime() < bt) {
+      first.antars[0].start = new Date(bt);
+    }
+
     return { balanceStart: mdStartDate, mahadashas: mahadashas };
   }
 

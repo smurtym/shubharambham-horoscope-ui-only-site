@@ -29,9 +29,10 @@ pure-JavaScript approximation used in v0.1.0.
 - **No ephemeris path needed:** in Moshier mode there are no `.se1` files, so
   `swe_set_ephe_path` is not called (it only matters for `SEFLG_SWIEPH`/`SEFLG_JPLEPH`).
 
-- **Sun-only fast path:** as of v0.4.1 the shim also exports `se_sun_sid(tjd_ut)` returning
-  the Sun's sidereal longitude only, used by the precise Vimshottari dasha to avoid a full
-  `se_compute` per root-finding step.
+- **Sun-only fast path:** the shim exports `se_sun_trop(tjd_ut)` returning the Sun's
+  **tropical** longitude only, used by the precise Vimshottari dasha (360° tropical = one
+  dasha-year, per JHora — v0.5.2) to avoid a full `se_compute` per root-finding step. (In
+  v0.4.1 this was `se_sun_sid`, returning the sidereal longitude; renamed/changed in v0.5.2.)
 
 To rebuild, see the header of `build.sh`. `se_compute` fills **23** doubles (was 13);
 `se_sun_sid` fills **1**.

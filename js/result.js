@@ -73,11 +73,12 @@
     var westernSign = Math.floor(sunTropLon / 30);
 
     var karakas = window.Jyotish.charaKarakas(chart.grahas);
-    // Vimshottari is measured by the Sun's actual sidereal revolution (item 8): give the
-    // dasha builder the Sun's sidereal longitude at any instant. Uses the dedicated Sun-only
-    // fast path (v0.4.1 item 5) so the hundreds of root-finding evaluations stay cheap.
+    // Vimshottari is measured by the Sun's actual revolution — 360° of TROPICAL longitude per
+    // dasha-year, matching JHora (v0.5.2 item 4). The dasha builder reads the Sun's tropical
+    // longitude at any instant via the dedicated Sun-only fast path (v0.4.1 item 5), and gets
+    // the birth date so it can trim the balance dasha's pre-birth antardashas (item 3).
     var dasha = window.Jyotish.vimshottari(birthDate, moonSid,
-      { sunLon0: sunSid, sunLonAt: window.Astro.sunSidLon });
+      { sunLon0: sunTropLon, sunLonAt: window.Astro.sunTropLon });
 
     return {
       person: person,

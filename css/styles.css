@@ -297,33 +297,33 @@ table.planets .abbr { color: var(--ink-soft); font-weight: 400; }
   font-size: 0.8rem;
 }
 
-/* On narrow screens, stack each planet row as a labelled block so there is no horizontal
-   scroll (v0.5.0 item 3). The data-label on each <td> supplies the column name. */
+/* On narrow screens each planet becomes a compact two-line card instead of a horizontally
+   scrolling table (v0.5.2 item 2): line 1 = name/abbr, position, nakshatra; line 2 = Rasi,
+   Navamsa, karaka. No per-field headings; only Rasi/Navamsa carry a short label. */
 @media (max-width: 560px) {
   .table-scroll { overflow-x: visible; }
-  table.planets { min-width: 0; }
+  table.planets { min-width: 0; font-size: 0.82rem; }
   table.planets thead { display: none; }
   table.planets tbody tr {
-    display: block;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    grid-template-areas: "nm pos nak" "ras nav kar";
+    gap: 2px 10px;
     border: 1px solid var(--line);
     border-radius: 6px;
-    padding: 4px 10px;
-    margin-bottom: 10px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
   }
-  table.planets td {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    border: none;
-    padding: 3px 0;
-    white-space: normal;
-  }
-  table.planets td.pl { white-space: normal; }
-  table.planets td::before {
-    content: attr(data-label);
-    color: var(--ink-soft);
-    font-weight: 600;
-  }
+  table.planets tbody tr:nth-child(even) { background: var(--accent-soft); }
+  table.planets td { border: none; padding: 0; min-width: 0; }
+  table.planets td:nth-child(1) { grid-area: nm; font-weight: 600; white-space: nowrap; }
+  table.planets td:nth-child(2) { grid-area: pos; white-space: nowrap; }
+  table.planets td:nth-child(3) { grid-area: nak; }
+  table.planets td:nth-child(4) { grid-area: ras; white-space: nowrap; }
+  table.planets td:nth-child(5) { grid-area: nav; white-space: nowrap; }
+  table.planets td:nth-child(6) { grid-area: kar; }
+  table.planets td:nth-child(4)::before { content: "Rasi: "; color: var(--ink-soft); }
+  table.planets td:nth-child(5)::before { content: "Navamsa: "; color: var(--ink-soft); }
 }
 
 /* Dasha */

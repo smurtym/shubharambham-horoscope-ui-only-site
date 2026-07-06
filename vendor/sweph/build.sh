@@ -20,7 +20,7 @@ emcc -O3 \
   -s ENVIRONMENT=web,worker \
   -s SINGLE_FILE=1 \
   -s ALLOW_MEMORY_GROWTH=1 \
-  -s "EXPORTED_FUNCTIONS=['_se_compute','_se_sun_sid','_swe_close','_swe_version','_malloc','_free']" \
+  -s "EXPORTED_FUNCTIONS=['_se_compute','_se_sun_trop','_swe_close','_swe_version','_malloc','_free']" \
   -s "EXPORTED_RUNTIME_METHODS=['ccall','cwrap','getValue','setValue','UTF8ToString','HEAPF64']"
 
 echo "Built sweph.js ($(wc -c < sweph.js) bytes). Copy it to vendor/sweph/."

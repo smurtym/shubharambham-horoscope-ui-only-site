@@ -93,11 +93,42 @@
     return hit ? hit.id : null;
   }
 
-  // ---- Date: native date picker, defaulting to today (v0.5.1 items 2/3) -----
-  function setupDate() {
-    var d = byId("date");
+  // ---- Date: Day/Month/Year dropdowns (v0.5.2 item 1) -----------------------
+  // Native <input type="date"> was dropped again because its display format follows the
+  // browser locale (showed mm/dd/yyyy for the user). Dropdowns are unambiguous dd/mm/yyyy.
+  var MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+    "Nov", "Dec"];
+
+  function populateDate() {
     var now = new Date();
-    d.value = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+    var daySel = byId("day");
+    for (var d = 1; d <= 31; d++) {
+      daySel.appendChild(new Option(pad(d), String(d)));
+    }
+    var monSel = byId("month");
+    for (var mo = 1; mo <= 12; mo++) {
+      monSel.appendChild(new Option(pad(mo) + " (" + MONTH_ABBR[mo - 1] + ")", String(mo)));
+    }
+    var yearSel = byId("year");
+    for (var y = 2100; y >= 1950; y--) {
+      yearSel.appendChild(new Option(String(y), String(y)));
+    }
+    // Default to today's date (item 1).
+    daySel.value = String(now.getDate());
+    monSel.value = String(now.getMonth() + 1);
+    yearSel.value = String(now.getFullYear());
+  }
+
+  // Read the Day/Month/Year dropdowns into {y,mo,d} with real-calendar validation, or null.
+  function readDate() {
+    var d = byId("day").value, mo = byId("month").value, y = byId("year").value;
+    if (d === "" || mo === "" || y === "") return null;
+    d = +d; mo = +mo; y = +y;
+    // Reject impossible dates (e.g. 31 Feb) by round-tripping through Date.
+    var probe = new Date(Date.UTC(y, mo - 1, d));
+    if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== mo - 1 ||
+      probe.getUTCDate() !== d) return null;
+    return { y: y, mo: mo, d: d };
   }
 
   // ---- Time dropdowns -------------------------------------------------------
@@ -131,12 +162,12 @@
     e.preventDefault();
     byId("form-error").hidden = true;
 
-    var dateVal = byId("date").value;               // "YYYY-MM-DD" from the native picker
+    var dmy = readDate();                           // {y,mo,d} from the dropdowns
     var hour = byId("hour").value;
     var minute = byId("minute").value;
     var placeId = resolvePlaceId();
 
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) return showError("Please select the birth date.");
+    if (!dmy) return showError("Please select a valid birth date (day, month and year).");
     if (hour === "" || minute === "") return showError("Please select the birth hour and minute.");
     if (!placeId) return showError("Please pick a birth place from the list.");
 
@@ -146,7 +177,8 @@
     }
 
     // Internal payload keeps the ISO local datetime; seconds are always :00.
-    var dateTime = dateVal + "T" + pad(h) + ":" + pad(mi) + ":00";
+    var dateTime = dmy.y + "-" + pad(dmy.mo) + "-" + pad(dmy.d) +
+      "T" + pad(h) + ":" + pad(mi) + ":00";
 
     var person = {
       Name: byId("name").value.trim(),
@@ -162,7 +194,7 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     setupPlaceCombo();
-    setupDate();
+    populateDate();
     populateTime();
     byId("birth-form").addEventListener("submit", onSubmit);
   });

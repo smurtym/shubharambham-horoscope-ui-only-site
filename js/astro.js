@@ -40,8 +40,8 @@
   var Mod = null;        // the instantiated Emscripten module
   var outPtr = 0;        // reusable heap buffer for the 23 output doubles
   var errPtr = 0;        // reusable 256-byte error buffer
-  var se_compute = null; // cwrap'd entry point
-  var se_sun_sid = null; // cwrap'd Sun-only entry point (fast path for the dasha)
+  var se_compute = null;  // cwrap'd entry point
+  var se_sun_trop = null; // cwrap'd Sun-only entry point (fast path for the dasha)
   var readyPromise = null;
 
   // Load and instantiate the WASM module exactly once.
@@ -58,7 +58,7 @@
       errPtr = Mod._malloc(256);
       se_compute = Mod.cwrap("se_compute", "number",
         ["number", "number", "number", "number", "number"]);
-      se_sun_sid = Mod.cwrap("se_sun_sid", "number", ["number", "number", "number"]);
+      se_sun_trop = Mod.cwrap("se_sun_trop", "number", ["number", "number", "number"]);
       return true;
     });
     return readyPromise;
@@ -104,15 +104,16 @@
     };
   }
 
-  // Fast path: the Sun's sidereal ecliptic longitude only, in [0,360). Used by the precise
+  // Fast path: the Sun's tropical ecliptic longitude only, in [0,360). Used by the precise
   // Vimshottari dasha, which evaluates it hundreds of times while root-finding, so it avoids
-  // the full planet/house computation (v0.4.1 item 5). Must be called after Astro.ready().
-  function sunSidLon(date) {
-    if (!se_sun_sid) {
-      throw new Error("Astro.sunSidLon() called before Astro.ready() resolved.");
+  // the full planet/house computation (v0.4.1 item 5). The dasha year is 360° of tropical
+  // solar motion (v0.5.2 item 4). Must be called after Astro.ready().
+  function sunTropLon(date) {
+    if (!se_sun_trop) {
+      throw new Error("Astro.sunTropLon() called before Astro.ready() resolved.");
     }
     var jdUT = julianDayFromDate(date);
-    var rc = se_sun_sid(jdUT, outPtr, errPtr); // reuse outPtr; writes a single double
+    var rc = se_sun_trop(jdUT, outPtr, errPtr); // reuse outPtr; writes a single double
     if (rc !== 0) {
       throw new Error("Swiss Ephemeris error: " + Mod.UTF8ToString(errPtr));
     }
@@ -122,7 +123,7 @@
   global.Astro = {
     compute: compute,
     ready: ready,
-    sunSidLon: sunSidLon,
+    sunTropLon: sunTropLon,
     norm360: norm360,
     julianDayFromDate: julianDayFromDate
   };

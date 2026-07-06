@@ -80,22 +80,21 @@ int se_compute(double tjd_ut, double geolat, double geolon, double *out, char *s
 }
 
 /*
- * se_sun_sid — sidereal ecliptic longitude of the Sun only (v0.4.1 item 5).
+ * se_sun_trop — tropical ecliptic longitude of the Sun only (v0.4.1 item 5; v0.5.2 item 4).
  *
- * The precise Vimshottari dasha (js/jyotish.js) needs the Sun's sidereal longitude at many
- * trial instants while root-finding; calling the full se_compute() there would waste ~12
- * body/house calculations per step. This does the minimum: one Sun call plus the ayanamsa.
- *   out[0] = sidereal Sun longitude (degrees, NOT normalised; caller wraps to [0,360)).
+ * The precise Vimshottari dasha (js/jyotish.js) needs the Sun's longitude at many trial
+ * instants while root-finding; calling the full se_compute() there would waste ~12 body/house
+ * calculations per step. This does the minimum: one Sun call. The dasha year is measured as
+ * 360° of the Sun's TROPICAL longitude (a tropical year), matching JHora (v0.5.2 item 4).
+ *   out[0] = tropical Sun longitude (degrees, NOT normalised; caller wraps to [0,360)).
  * Returns 0 on success, -1 on error (serr holds the message).
  */
 EMSCRIPTEN_KEEPALIVE
-int se_sun_sid(double tjd_ut, double *out, char *serr) {
+int se_sun_trop(double tjd_ut, double *out, char *serr) {
   int32 iflag = SEFLG_MOSEPH; /* speed not needed here */
-  double xx[6], daya;
+  double xx[6];
   serr[0] = '\0';
   if (swe_calc_ut(tjd_ut, SE_SUN, iflag, xx, serr) < 0) return -1;
-  swe_set_sid_mode(SE_SIDM_TRUE_CITRA, 0, 0);
-  if (swe_get_ayanamsa_ex_ut(tjd_ut, iflag, &daya, serr) < 0) return -1;
-  out[0] = xx[0] - daya;
+  out[0] = xx[0];
   return 0;
 }

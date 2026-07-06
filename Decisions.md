@@ -413,3 +413,46 @@ unchanged.
 ## Cache-buster
 
 Bumped to `?v=0.5.1` in both HTML files (see #23; bump every release).
+
+---
+
+# v0.5.2 decisions
+
+Assignment `work-assignment/v0.5.2.txt`: four items.
+
+## 36. Vimshottari year = 360° of TROPICAL Sun (item 4; supersedes #17)
+
+**Decision:** the dasha "year" is now one full revolution of the Sun in **tropical** longitude
+(a tropical year, mean 365.24219 d), replacing the sidereal choice of #17. This matches
+**JHora**, which the user takes as authentic. The Sun fast-path shim `se_sun_sid` (sidereal)
+was changed to **`se_sun_trop`** (tropical Sun longitude — also simpler, no ayanamsa step);
+`Astro.sunSidLon` → `Astro.sunTropLon`; the WASM was rebuilt. The dasha *lord/start fraction*
+still come from the Moon's **sidereal** nakshatra (unchanged); only the year-length mapping is
+tropical. Effect vs. sidereal is ≤~1.7 days over the full 120-year span.
+
+## 37. First maha dasha trimmed to birth (item 3)
+
+**Decision:** the first maha dasha is the running (balance) dasha and began before birth. Its
+antardashas that finished before birth are dropped, and the antardasha running at birth is
+**clamped to start at the birth instant**, so the antardasha timeline begins at birth. The
+maha-dasha summary still shows its true (pre-birth) start/end and nominal years — only the
+antardasha list is trimmed, per the literal request.
+
+## 38. Birth date back to Day/Month/Year dropdowns (item 1; supersedes #34)
+
+**Decision:** the native `<input type="date">` (#34) is reverted to three **dropdowns**
+(Day/Month/Year). As anticipated in #34, the native picker's display format follows the
+browser/OS locale and showed **mm/dd/yyyy** for the user — which can't be forced. Dropdowns
+are unambiguous dd/mm/yyyy. **Year range 1950–2100** (per the request), and all three default
+to **today's** date.
+
+## 39. Mobile planetary table = compact two-line cards (item 2; supersedes #31)
+
+**Decision:** on ≤560px each planet renders as a two-line card via CSS grid areas — line 1:
+name/abbr, position, nakshatra(pada); line 2: `Rasi: x  Navamsa: y  <karaka>`. The per-field
+data-label headings from #31 are dropped; only Rasi and Navamsa carry a short inline label.
+Zebra striping and "no horizontal scroll" are retained.
+
+## Cache-buster
+
+Bumped to `?v=0.5.2` in both HTML files (see #23; bump every release).
