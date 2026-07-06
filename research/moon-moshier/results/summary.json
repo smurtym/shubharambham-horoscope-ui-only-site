@@ -1,0 +1,83 @@
+{
+  "reference": "SWIEPH (DE431) vs MOSEPH, Moon ecliptic longitude, SEFLG_NONUT, geocentric",
+  "step_minutes": 1,
+  "samples": 78893280,
+  "units": "arcsec unless noted",
+  "mean": 0.569328,
+  "rms": 0.709272,
+  "max_refined": {
+    "arcsec": 3.41255,
+    "arcmin": 0.056876,
+    "utc": "2068-03-03 06:30:27.353"
+  },
+  "percentiles_arcsec": {
+    "p50": 0.4895,
+    "p90": 1.1555,
+    "p95": 1.3695,
+    "p99": 1.8075,
+    "p99.9": 2.3985,
+    "p99.99": 2.9225
+  },
+  "survival": [
+    {
+      "gt_arcsec": 1,
+      "gt_arcmin": 0.016666666666666666,
+      "count": 12405157,
+      "pct": 15.723971674140053
+    },
+    {
+      "gt_arcsec": 2,
+      "gt_arcmin": 0.03333333333333333,
+      "count": 405086,
+      "pct": 0.5134607155387633
+    },
+    {
+      "gt_arcsec": 5,
+      "gt_arcmin": 0.08333333333333333,
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "gt_arcsec": 10,
+      "gt_arcmin": 0.16666666666666666,
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "gt_arcsec": 30,
+      "gt_arcmin": 0.5,
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "gt_arcsec": 60,
+      "gt_arcmin": 1.0,
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "gt_arcsec": 90,
+      "gt_arcmin": 1.5,
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "gt_arcsec": 120,
+      "gt_arcmin": 2.0,
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "gt_arcsec": 180,
+      "gt_arcmin": 3.0,
+      "count": 0,
+      "pct": 0.0
+    },
+    {
+      "gt_arcsec": 300,
+      "gt_arcmin": 5.0,
+      "count": 0,
+      "pct": 0.0
+    }
+  ]
+}
