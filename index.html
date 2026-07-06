@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Shubharambham Horoscope</title>
   <meta name="description" content="A private, no-nonsense Vedic (Jyotish) horoscope calculator for astrologers. No accounts, no tracking, no predictions.">
-  <link rel="stylesheet" href="css/styles.css?v=0.4.2">
+  <link rel="stylesheet" href="css/styles.css?v=0.5.0">
 </head>
 <body>
   <main class="page">
@@ -84,9 +84,9 @@
 
       <div class="field">
         <label for="place">Birth place <span class="req">*</span></label>
-        <select id="place" name="place" required>
-          <option value="">Select a place…</option>
-        </select>
+        <input type="text" id="place" name="place" required autocomplete="off"
+          list="place-list" placeholder="Type to search a city…">
+        <datalist id="place-list"></datalist>
       </div>
 
       <div class="field">
@@ -110,8 +110,8 @@
 
   <!-- ?v= cache-buster: bump on every release so browsers never serve a stale mix of
        old/new JS (a partial cache is what broke the charts in v0.4.0). -->
-  <script src="js/places.js?v=0.4.2"></script>
-  <script src="js/common.js?v=0.4.2"></script>
-  <script src="js/app.js?v=0.4.2"></script>
+  <script src="js/places.js?v=0.5.0"></script>
+  <script src="js/common.js?v=0.5.0"></script>
+  <script src="js/app.js?v=0.5.0"></script>
 </body>
 </html>

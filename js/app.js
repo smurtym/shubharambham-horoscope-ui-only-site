@@ -9,17 +9,23 @@
 
   function byId(id) { return document.getElementById(id); }
 
-  // Populate the place dropdown from the bundled dataset (sorted by city).
+  // Map of place display label ("City — Region") -> place id, filled by populatePlaces().
+  var PLACE_LABEL_TO_ID = {};
+
+  // Populate the searchable place list (a native <datalist>) from the bundled dataset,
+  // sorted by city. The <input> filters these as the user types (v0.5.0 item 2).
   function populatePlaces() {
-    var select = byId("place");
+    var dl = byId("place-list");
     var places = (window.PLACES || []).slice().sort(function (a, b) {
       return a.city.localeCompare(b.city);
     });
+    PLACE_LABEL_TO_ID = {};
     places.forEach(function (p) {
+      var label = p.city + " — " + p.region;
+      PLACE_LABEL_TO_ID[label] = p.id;
       var opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = p.city + " — " + p.region;
-      select.appendChild(opt);
+      opt.value = label;
+      dl.appendChild(opt);
     });
   }
 
@@ -97,11 +103,12 @@
     var dmy = readDate();                           // {y,mo,d} from the dropdowns
     var hour = byId("hour").value;
     var minute = byId("minute").value;
-    var placeId = byId("place").value;
+    // The place input holds the display label; resolve it back to the dataset id.
+    var placeId = PLACE_LABEL_TO_ID[byId("place").value.trim()];
 
     if (!dmy) return showError("Please select a valid birth date (day, month and year).");
     if (hour === "" || minute === "") return showError("Please select the birth hour and minute.");
-    if (!placeId) return showError("Please select the birth place.");
+    if (!placeId) return showError("Please pick a birth place from the list.");
 
     var h = parseInt(hour, 10), mi = parseInt(minute, 10);
     if (h < 0 || h > 23 || mi < 0 || mi > 59) {

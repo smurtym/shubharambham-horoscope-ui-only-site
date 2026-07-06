@@ -29,7 +29,9 @@ html, body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font);
-  font-size: 16px;
+  /* Monospace is wider than proportional type, so the base size is dropped a step to cut
+     down on wrapping (v0.5.0 item 1). */
+  font-size: 14px;
   line-height: 1.55;
   -webkit-text-size-adjust: 100%;
 }
@@ -252,6 +254,8 @@ table.planets thead th {
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
+/* Alternate row shading to tell the planet lines apart (v0.5.0 item 3). */
+table.planets tbody tr:nth-child(even) { background: var(--accent-soft); }
 table.planets td.pl { font-weight: 600; white-space: nowrap; }
 table.planets .abbr { color: var(--ink-soft); font-weight: 400; }
 /* Retrograde grahas are shown parenthesised, e.g. (Ju); highlight the marker. */
@@ -271,6 +275,35 @@ table.planets .abbr { color: var(--ink-soft); font-weight: 400; }
   font-size: 0.8rem;
 }
 
+/* On narrow screens, stack each planet row as a labelled block so there is no horizontal
+   scroll (v0.5.0 item 3). The data-label on each <td> supplies the column name. */
+@media (max-width: 560px) {
+  .table-scroll { overflow-x: visible; }
+  table.planets { min-width: 0; }
+  table.planets thead { display: none; }
+  table.planets tbody tr {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-bottom: 10px;
+  }
+  table.planets td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border: none;
+    padding: 3px 0;
+    white-space: normal;
+  }
+  table.planets td.pl { white-space: normal; }
+  table.planets td::before {
+    content: attr(data-label);
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+}
+
 /* Dasha */
 .dasha-list { display: flex; flex-direction: column; gap: 6px; }
 details.dasha-md {
@@ -279,10 +312,12 @@ details.dasha-md {
   overflow: hidden;
 }
 details.dasha-md summary {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 14px;
-  align-items: center;
+  /* Left-aligned flow (v0.5.0 item 4): the earlier grid had a leading 1fr column that,
+     together with the ▸ marker pseudo-element, pushed the lord/dates to the right. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
   padding: 10px 14px;
   cursor: pointer;
   list-style: none;
@@ -295,7 +330,7 @@ details.dasha-md summary::before {
   margin-right: 6px;
 }
 details.dasha-md[open] summary::before { content: "▾"; }
-.md-lord { font-weight: 700; }
+.md-lord { font-weight: 700; min-width: 72px; }
 .md-range { color: var(--ink-soft); font-size: 0.9rem; }
 .md-years { color: var(--ink-soft); font-size: 0.85rem; }
 .dasha-antars { padding: 4px 14px 12px; }

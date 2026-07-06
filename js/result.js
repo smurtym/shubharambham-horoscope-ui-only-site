@@ -218,12 +218,12 @@
     var a = model.chart.ascendant;
     var lagnaTr = el("tr");
     lagnaTr.innerHTML =
-      "<td class=\"pl\">Lagna <span class=\"abbr\">As</span></td>" +
-      "<td>" + esc(fmtPos(a)) + "</td>" +
-      "<td>" + esc(a.nakshatra) + " " + a.pada + "</td>" +
-      "<td>" + esc(a.signAbbr) + "</td>" +
-      "<td>" + esc(a.navamsaAbbr) + "</td>" +
-      "<td>—</td>";
+      "<td class=\"pl\" data-label=\"Planet\">Lagna <span class=\"abbr\">As</span></td>" +
+      "<td data-label=\"Position\">" + esc(fmtPos(a)) + "</td>" +
+      "<td data-label=\"Nakshatra (Pada)\">" + esc(a.nakshatra) + " " + a.pada + "</td>" +
+      "<td data-label=\"Rasi\">" + esc(a.signAbbr) + "</td>" +
+      "<td data-label=\"Navamsa\">" + esc(a.navamsaAbbr) + "</td>" +
+      "<td data-label=\"Karaka\">—</td>";
     tbody.appendChild(lagnaTr);
     var PLANET_NAME = {
       Sun: "Sun", Moon: "Moon", Mars: "Mars", Mercury: "Mercury", Jupiter: "Jupiter",
@@ -236,14 +236,15 @@
       // The abbreviation is parenthesised only when retrograde (g.label), matching the
       // charts, so "(Ju)" reads as a retrograde graha and "Ju" as direct.
       tr.innerHTML =
-        "<td class=\"pl\">" + esc(PLANET_NAME[name]) + " <span class=\"abbr" +
-        (g.retro ? " retro" : "") + "\">" + esc(g.label) + "</span></td>" +
-        "<td>" + esc(fmtPos(g)) + "</td>" +
-        "<td>" + esc(g.nakshatra) + " " + g.pada + "</td>" +
-        "<td>" + esc(g.signAbbr) + "</td>" +
-        "<td>" + esc(g.navamsaAbbr) + "</td>" +
-        "<td>" + (k ? "<span class=\"karaka\">" + esc(k.abbr) + "</span> " +
-          esc(k.name) : "—") + "</td>";
+        "<td class=\"pl\" data-label=\"Planet\">" + esc(PLANET_NAME[name]) +
+        " <span class=\"abbr" + (g.retro ? " retro" : "") + "\">" + esc(g.label) +
+        "</span></td>" +
+        "<td data-label=\"Position\">" + esc(fmtPos(g)) + "</td>" +
+        "<td data-label=\"Nakshatra (Pada)\">" + esc(g.nakshatra) + " " + g.pada + "</td>" +
+        "<td data-label=\"Rasi\">" + esc(g.signAbbr) + "</td>" +
+        "<td data-label=\"Navamsa\">" + esc(g.navamsaAbbr) + "</td>" +
+        "<td data-label=\"Karaka\">" + (k ? "<span class=\"karaka\">" + esc(k.abbr) +
+          "</span> " + esc(k.name) : "—") + "</td>";
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);

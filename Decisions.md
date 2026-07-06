@@ -332,3 +332,40 @@ These changes are mirrored in the PDF (`pdf.js`) so the download matches the pag
 ## Cache-buster
 
 Bumped to `?v=0.4.2` in both HTML files (see #23; bump every release).
+
+---
+
+# v0.5.0 decisions (readability & mobile)
+
+Assignment `work-assignment/v0.5.0.txt`: four UI items.
+
+## 29. Base font size dropped to 14px (item 1)
+
+**Decision:** the root font size is reduced from 16px to **14px**. The monospace stack adopted
+in v0.4.0 is wider than proportional type and was wrapping values throughout; a one-step
+reduction cuts the wrapping while staying readable. Component sizes are mostly `rem`-based so
+they scale with it.
+
+## 30. Birth place is a searchable native datalist (item 2)
+
+**Decision:** the place `<select>` is replaced by a text `<input list="place-list">` backed by
+a native `<datalist>`, so typing filters the cities as-you-type with no framework/library and
+fully offline. The input holds the display label ("City — Region"); `app.js` keeps a
+label→id map and resolves it on submit, erroring if the text doesn't match a listed place.
+
+## 31. Planetary table stacks on mobile + zebra striping (item 3)
+
+**Decision:** every `<td>` carries a `data-label` (the column name). At ≤560px the table
+switches to a stacked, one-card-per-row layout (`thead` hidden, each `td` a label/value flex
+row using `::before { content: attr(data-label) }`), removing the horizontal scroll on phones.
+Rows are zebra-striped (`tbody tr:nth-child(even)` tinted with `--accent-soft`) on all widths.
+
+## 32. Dasha summary left-aligned (item 4)
+
+**Decision:** the maha-dasha `<summary>` switched from a CSS grid (whose leading `1fr` column,
+together with the `▸` marker pseudo-element being the first grid item, pushed the lord/dates to
+the right) to a left-aligned flex row. The lord gets a `min-width` so the date ranges line up.
+
+## Cache-buster
+
+Bumped to `?v=0.5.0` in both HTML files (see #23; bump every release).
