@@ -1,0 +1,17 @@
+
+1. Still reduce the font for Details section. It's too big
+
+2. Instead of having showing the details side by side, show them as rows where each row has alternate color. Each row contains two lines. First line is deatils, second line is actual value.
+
+For example
+Sun sign — Vedic (sidereal)
+Gemini
+
+This has to be done for mobile only. Desktop looks good
+
+3. Change First Vimsottari dasa starting date also from birth date.
+
+4. Planetary Positions table does not look great in mobile. I want all names of planets, degrees, nakshatras, rasi, navamsa, karakas to be aligned vertically even in mobile, though they are in alternate lines.
+
+5. Remove print option. I do not need it.
+
