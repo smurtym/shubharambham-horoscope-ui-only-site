@@ -29,10 +29,12 @@
     return pad2(d.getUTCDate()) + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear();
   }
 
-  // "0Ar38'12\"" — degree, sign, arcminutes, arcseconds, no internal spaces so it takes
-  // less horizontal room in the planetary table (v0.5.4 item 3).
+  // "02Pi45'23\"" — 2-digit degree (v0.5.5 item 1), sign abbreviation wrapped in a colored
+  // span (item 2), arcminutes, arcseconds, no internal spaces (v0.5.4 item 3). Returns HTML
+  // — callers must NOT esc() the result.
   function fmtPos(g) {
-    return g.deg + g.signAbbr + pad2(g.min) + "'" + pad2(g.sec) + '"';
+    return pad2(g.deg) + "<span class=\"rasi\">" + esc(g.signAbbr) + "</span>" +
+      pad2(g.min) + "'" + pad2(g.sec) + '"';
   }
 
   function showFatal(msg) {
@@ -130,8 +132,9 @@
       ["Sun sign — Western (tropical)", esc(SIGN[model.westernSign])],
       // Moon sign only — the nakshatra already has its own row (item 7).
       ["Moon sign", esc(g.Moon.signName)],
-      // Lagna as the sign name only; the degrees live in the planetary table (item 5).
-      ["Lagna", esc(a.signName)]
+      // Ascendant as the sign name only; the degrees live in the planetary table (item 5).
+      // Labelled "Ascendent" per v0.5.5 item 3 (spelling as requested in the assignment).
+      ["Ascendent", esc(a.signName)]
     );
     var section = el("section", "card");
     section.appendChild(el("h2", null, "Details"));
@@ -216,12 +219,13 @@
       "<th>D1</th><th>D9</th><th>Karaka</th>" +
       "</tr></thead>";
     var tbody = el("tbody");
-    // Lagna (ascendant) as the first row — same columns as a graha, no karaka (item 5).
+    // Ascendant as the first row — same columns as a graha, no karaka (item 5). Labelled
+    // "Ascendent" per v0.5.5 item 3.
     var a = model.chart.ascendant;
     var lagnaTr = el("tr");
     lagnaTr.innerHTML =
-      "<td class=\"pl\" data-label=\"Planet\">Lagna</td>" +
-      "<td data-label=\"Position\">" + esc(fmtPos(a)) + "</td>" +
+      "<td class=\"pl\" data-label=\"Planet\">Ascendent</td>" +
+      "<td data-label=\"Position\">" + fmtPos(a) + "</td>" +
       "<td data-label=\"Nakshatra (Pada)\">" + esc(a.nakshatra) + " " + a.pada + "</td>" +
       "<td data-label=\"D1\">" + esc(a.signAbbr) + "</td>" +
       "<td data-label=\"D9\">" + esc(a.navamsaAbbr) + "</td>" +
@@ -240,7 +244,7 @@
       tr.innerHTML =
         "<td class=\"pl\" data-label=\"Planet\">" + esc(PLANET_NAME[name]) +
         (g.retro ? "<span class=\"retro\">(R)</span>" : "") + "</td>" +
-        "<td data-label=\"Position\">" + esc(fmtPos(g)) + "</td>" +
+        "<td data-label=\"Position\">" + fmtPos(g) + "</td>" +
         "<td data-label=\"Nakshatra (Pada)\">" + esc(g.nakshatra) + " " + g.pada + "</td>" +
         "<td data-label=\"D1\">" + esc(g.signAbbr) + "</td>" +
         "<td data-label=\"D9\">" + esc(g.navamsaAbbr) + "</td>" +
@@ -262,7 +266,8 @@
       var details = el("details", "dasha-md");
       var summary = el("summary");
       summary.innerHTML =
-        "<span class=\"md-lord\">" + esc(md.lord) + "</span>" +
+        // Suffixed "Mahadasa" per v0.5.5 item 4, e.g. "Moon" -> "Moon Mahadasa".
+        "<span class=\"md-lord\">" + esc(md.lord) + " Mahadasa</span>" +
         "<span class=\"md-range\">" + fmtDate(md.start) + " – " + fmtDate(md.end) + "</span>" +
         "<span class=\"md-years\">" + md.years + " yrs</span>";
       details.appendChild(summary);

@@ -44,9 +44,22 @@
   function fmtDate(d) {
     return pad2(d.getUTCDate()) + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear();
   }
-  // No internal spaces, matching the on-screen table (v0.5.4 item 3).
-  function fmtPos(g) {
-    return g.deg + g.signAbbr + pad2(g.min) + "'" + pad2(g.sec) + '"';
+  // Teal, matching css/styles.css --rasi (v0.5.5 item 2) — jsPDF has no CSS to read from.
+  var RASI_RGB = [0x2f, 0x6f, 0x7a];
+
+  // Draws "02Pi45'23"" at (x, y): 2-digit degree (item 1), sign abbreviation in --rasi
+  // (item 2), arcminutes, arcseconds, no internal spaces (v0.5.4 item 3). jsPDF has no rich
+  // text, so this draws three doc.text() calls back to back instead of returning a string.
+  function drawPos(doc, g, x, y) {
+    var deg = pad2(g.deg), tail = pad2(g.min) + "'" + pad2(g.sec) + '"';
+    doc.setTextColor(30);
+    doc.text(deg, x, y);
+    x += doc.getTextWidth(deg);
+    doc.setTextColor(RASI_RGB[0], RASI_RGB[1], RASI_RGB[2]);
+    doc.text(g.signAbbr, x, y);
+    x += doc.getTextWidth(g.signAbbr);
+    doc.setTextColor(30);
+    doc.text(tail, x, y);
   }
 
   function generate(model) {
@@ -85,7 +98,7 @@
       ["Sun — Vedic (sidereal)", g.Sun.signName],
       ["Sun — Western (tropical)", SIGN[model.westernSign]],
       ["Moon sign", g.Moon.signName],             // no nakshatra (item 7)
-      ["Lagna", a.signName]                        // name only (item 5)
+      ["Ascendent", a.signName]                    // name only (item 5)
     );
     doc.setFont("courier", "bold").setFontSize(11).setTextColor(60);
     doc.text("Details", MARGIN, y); y += 14;
@@ -148,10 +161,15 @@
       y += 4;
       doc.setDrawColor(210); doc.line(MARGIN, y, PAGE_W - MARGIN, y); y += 12;
       doc.setFont("courier", "normal").setTextColor(30);
-      // Lagna (ascendant) first, then the grahas (item 5).
+      // Ascendant first, then the grahas (item 5). Labelled "Ascendent" (v0.5.5 item 3).
+      // Column 1 (Position) is drawn with drawPos() instead of doc.text() so the sign
+      // abbreviation can get its own color (v0.5.5 items 1–2).
       ensure(16);
-      ["Lagna", fmtPos(a), a.nakshatra + " " + a.pada, a.signAbbr, a.navamsaAbbr, "—"]
-        .forEach(function (txt, i) { doc.text(String(txt), cols[i].x, y); });
+      ["Ascendent", null, a.nakshatra + " " + a.pada, a.signAbbr, a.navamsaAbbr, "—"]
+        .forEach(function (txt, i) {
+          if (i === 1) { drawPos(doc, a, cols[i].x, y); return; }
+          doc.text(String(txt), cols[i].x, y);
+        });
       y += 15;
       model.chart.order.forEach(function (nm) {
         ensure(16);
@@ -160,13 +178,16 @@
         // Plain name + bare "(R)" if retrograde, no abbreviation (v0.5.4 item 3).
         var cells = [
           nm + (gr.retro ? "(R)" : ""),
-          fmtPos(gr),
+          null,
           gr.nakshatra + " " + gr.pada,
           gr.signAbbr,
           gr.navamsaAbbr,
           k ? k.abbr + " " + k.name : "—"
         ];
-        cells.forEach(function (txt, i) { doc.text(String(txt), cols[i].x, y); });
+        cells.forEach(function (txt, i) {
+          if (i === 1) { drawPos(doc, gr, cols[i].x, y); return; }
+          doc.text(String(txt), cols[i].x, y);
+        });
         y += 15;
       });
       y += 10;
@@ -178,7 +199,8 @@
       model.dasha.mahadashas.forEach(function (md) {
         ensure(18);
         doc.setFont("courier", "bold").setFontSize(10).setTextColor(40);
-        doc.text(md.lord + "   " + fmtDate(md.start) + " – " + fmtDate(md.end) +
+        // Suffixed "Mahadasa" per v0.5.5 item 4, e.g. "Moon" -> "Moon Mahadasa".
+        doc.text(md.lord + " Mahadasa   " + fmtDate(md.start) + " – " + fmtDate(md.end) +
           "   (" + md.years + " yrs)", MARGIN, y);
         y += 14;
         doc.setFont("courier", "normal").setFontSize(9).setTextColor(70);
