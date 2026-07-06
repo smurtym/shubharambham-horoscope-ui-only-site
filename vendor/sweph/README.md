@@ -1,0 +1,32 @@
+# Swiss Ephemeris — WebAssembly build
+
+This directory holds the real [Swiss Ephemeris](https://www.astro.com/swisseph/) astronomy
+engine, compiled to WebAssembly, that powers `js/astro.js` as of **v0.2.0**. It replaces the
+pure-JavaScript approximation used in v0.1.0.
+
+## Files
+
+| File | What it is |
+|------|-----------|
+| `sweph.js` | The build artifact loaded by the site. A single self-contained Emscripten module with the WASM binary inlined as base64 (`SINGLE_FILE=1`). Defines the global factory `SwephModule`. |
+| `se_shim.c` | The thin C entry point we wrote (`se_compute`) that wraps the Swiss Ephemeris calls the app needs into one function filling a flat `double` array. |
+| `build.sh` | Reproduces `sweph.js` from the official sources + `se_shim.c`. |
+| `LICENSE.swisseph` | Swiss Ephemeris licence (AGPL-3.0 option — matches this project). |
+
+## How it was built
+
+- **Source:** official mirror `github.com/aloistr/swisseph`, Swiss Ephemeris **2.10.03**.
+- **Toolchain:** Emscripten **4.0.13** (`emcc`).
+- **Mode:** Moshier (`SEFLG_MOSEPH`) — Swiss Ephemeris's built-in analytical theory, which
+  needs **no `.se1` data files**. Essential for a static, offline, `file://` site. Accuracy
+  is far better than the v0.1.0 JS engine (sub-arcsecond for planets over several millennia;
+  the Moon within ~0.1′), though slightly below the full JPL-data ephemeris.
+- **Ayanamsa:** True Chitrapaksha (`SE_SIDM_TRUE_CITRA`), matching the v0.1.0 decision.
+- **Rahu:** mean lunar node (`SE_MEAN_NODE`), matching v0.1.0.
+
+To rebuild, see the header of `build.sh`.
+
+## Licence note
+
+Swiss Ephemeris is dual-licensed (AGPL-3.0 or a commercial licence). This project is
+AGPL-3.0, so the AGPL option applies. Keep `LICENSE.swisseph` alongside the artifact.
