@@ -369,3 +369,47 @@ the right) to a left-aligned flex row. The lord gets a `min-width` so the date r
 ## Cache-buster
 
 Bumped to `?v=0.5.0` in both HTML files (see #23; bump every release).
+
+---
+
+# v0.5.1 decisions (combobox, native date picker, chart markers)
+
+Assignment `work-assignment/v0.5.1.txt`: place search was broken, the date UX was wrong, and
+the North/East house markers crowded the planets.
+
+## 33. Custom combobox for the place search (item 1; supersedes #30)
+
+**Decision:** the native `<datalist>` (from #30) is replaced by a small **vanilla-JS
+combobox** — a text input plus a filtered `<ul role="listbox">`. It was unreliable: broken
+filtering on desktop, and on iOS Safari the datalist surfaced as keyboard suggestions rather
+than a dropdown. The combobox does case-insensitive substring filtering, supports mouse and
+keyboard (↑/↓/Enter/Esc), and resolves the chosen label to the dataset id. This leaves the
+strict "native elements only" convention, but the native control was not usable here.
+
+## 34. Native date picker (`type="date"`) — supersedes #26 (three dropdowns) and #12
+
+**Decision:** the birth date uses a native `<input type="date">` — a real calendar/wheel
+selector (the iOS wheel and desktop calendar the assignment asked for), with **min
+1950-01-01, max 2100-12-31**, defaulting to **today**. This replaces the v0.4.2 Day/Month/Year
+dropdowns.
+
+**Caveat (documented):** the *display* format of a native date input is controlled by the
+browser/OS locale and cannot be forced from HTML/CSS/JS. For the user's locale (India /
+`en-GB`-style) it shows **dd/mm/yyyy**, which is what was asked; `lang="en-GB"` is set on the
+input to bias browsers that honour it. A browser set to a US locale would show mm/dd/yyyy —
+the only way to *guarantee* dd/mm/yyyy display would be a fully custom calendar widget, which
+was judged not worth abandoning the native picker the user explicitly requested. The internal
+payload is unaffected (always ISO `YYYY-MM-DD`).
+
+## 35. North/East house markers moved to the house corners (item 4)
+
+**Decision:** in the North and East charts the rasi/house marker previously sat next to the
+planet anchor in the middle of each house, eating the planets' space. Each chart now has a
+separate **marker-position table** (`NORTH_MARK`, `EAST_MARK`) placing the marker in the
+outer corner of each house (as the South chart already did), centre-anchored and a step
+smaller (`.hmark`), so the planet block keeps the centre. South was already correct and is
+unchanged.
+
+## Cache-buster
+
+Bumped to `?v=0.5.1` in both HTML files (see #23; bump every release).

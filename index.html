@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Shubharambham Horoscope</title>
   <meta name="description" content="A private, no-nonsense Vedic (Jyotish) horoscope calculator for astrologers. No accounts, no tracking, no predictions.">
-  <link rel="stylesheet" href="css/styles.css?v=0.5.0">
+  <link rel="stylesheet" href="css/styles.css?v=0.5.1">
 </head>
 <body>
   <main class="page">
@@ -50,20 +50,11 @@
         </select>
       </div>
 
-      <fieldset class="field date-field">
-        <legend>Birth date <span class="req">*</span></legend>
-        <div class="date-inputs">
-          <label class="sub">Day
-            <select id="day" name="day" required><option value="">DD</option></select>
-          </label>
-          <label class="sub">Month
-            <select id="month" name="month" required><option value="">MM</option></select>
-          </label>
-          <label class="sub">Year
-            <select id="year" name="year" required><option value="">YYYY</option></select>
-          </label>
-        </div>
-      </fieldset>
+      <div class="field">
+        <label for="date">Birth date <span class="req">*</span></label>
+        <input type="date" id="date" name="date" required lang="en-GB"
+          min="1950-01-01" max="2100-12-31">
+      </div>
 
       <fieldset class="field time-field">
         <legend>Birth time <span class="req">*</span></legend>
@@ -84,9 +75,12 @@
 
       <div class="field">
         <label for="place">Birth place <span class="req">*</span></label>
-        <input type="text" id="place" name="place" required autocomplete="off"
-          list="place-list" placeholder="Type to search a city…">
-        <datalist id="place-list"></datalist>
+        <div class="combo">
+          <input type="text" id="place" name="place" required autocomplete="off"
+            placeholder="Type to search a city…" role="combobox"
+            aria-autocomplete="list" aria-expanded="false" aria-controls="place-results">
+          <ul id="place-results" class="combo-list" role="listbox" hidden></ul>
+        </div>
       </div>
 
       <div class="field">
@@ -110,8 +104,8 @@
 
   <!-- ?v= cache-buster: bump on every release so browsers never serve a stale mix of
        old/new JS (a partial cache is what broke the charts in v0.4.0). -->
-  <script src="js/places.js?v=0.5.0"></script>
-  <script src="js/common.js?v=0.5.0"></script>
-  <script src="js/app.js?v=0.5.0"></script>
+  <script src="js/places.js?v=0.5.1"></script>
+  <script src="js/common.js?v=0.5.1"></script>
+  <script src="js/app.js?v=0.5.1"></script>
 </body>
 </html>

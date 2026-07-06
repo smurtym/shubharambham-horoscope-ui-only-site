@@ -93,9 +93,16 @@
   }
 
   // ---- North Indian: diamond, fixed houses (H1 = ascendant sign) -----------
+  // Planet anchor per house (centre of the house region).
   var NORTH_HOUSE = [
     [180, 60], [90, 30], [30, 90], [60, 180], [30, 270], [90, 330],
     [180, 300], [270, 330], [330, 270], [300, 180], [330, 90], [270, 30]
+  ];
+  // Rasi-marker anchor per house, pushed to the outer corner of each house so it does not
+  // eat the space the planets need (v0.5.1 item 4). Centre-anchored (see .hmark).
+  var NORTH_MARK = [
+    [180, 32], [78, 16], [16, 78], [30, 180], [16, 286], [78, 344],
+    [180, 336], [286, 344], [344, 286], [330, 180], [344, 78], [286, 16]
   ];
 
   function renderNorth(placements, ascSign, title) {
@@ -106,10 +113,11 @@
     var body = "";
     for (var h = 0; h < 12; h++) {
       var sign = (ascSign + h) % 12;
-      var pos = NORTH_HOUSE[h];
+      var pos = NORTH_HOUSE[h], mk = NORTH_MARK[h];
       // North Indian houses are fixed and the rasi rotates, so each house is labelled with
-      // the sign occupying it — shown as an abbreviation (Ar, Ta, Ge …) per item 4.
-      body += '<text class="sign" x="' + pos[0] + '" y="' + (pos[1] - 12) + '">' +
+      // the sign occupying it — shown as an abbreviation (Ar, Ta, Ge …), tucked into the
+      // house's outer corner (item 4).
+      body += '<text class="hmark" x="' + mk[0] + '" y="' + mk[1] + '">' +
         SIGN_ABBR[sign] + '</text>';
       body += labelBlock(labelsFor(placements, sign, ascSign), pos[0], pos[1] + 6, 3);
     }
@@ -135,6 +143,22 @@
     [10, 320, 80],   // Aquarius   — NE corner, right triangle
     [11, 280, 40]    // Pisces     — NE corner, top triangle
   ];
+  // House-number marker anchor per compartment (same order as EAST_CELLS), pushed to the
+  // corner of each cell so it stays clear of the planets (v0.5.1 item 4). Centre-anchored.
+  var EAST_MARK = [
+    [162, 16],   // Aries      — N cell, top-left
+    [55, 14],    // Taurus     — NW top triangle
+    [15, 62],    // Gemini     — NW left triangle
+    [22, 136],   // Cancer     — W cell, top-left
+    [58, 252],   // Leo        — SW top/left triangle
+    [96, 348],   // Virgo      — SW bottom triangle
+    [138, 256],  // Libra      — S cell, top-left
+    [252, 348],  // Scorpio    — SE bottom triangle
+    [345, 258],  // Sagittarius— SE right triangle
+    [258, 136],  // Capricorn  — E cell, top-left
+    [345, 60],   // Aquarius   — NE right triangle
+    [252, 14]    // Pisces     — NE top triangle
+  ];
 
   function renderEast(placements, ascSign, title) {
     var frame = '<rect class="frame" x="0" y="0" width="360" height="360"/>';
@@ -144,8 +168,8 @@
     frame += line(0, 360, 120, 240) + line(360, 360, 240, 240);
     var body = "";
     for (var i = 0; i < EAST_CELLS.length; i++) {
-      var e = EAST_CELLS[i], s = e[0];
-      body += '<text class="sign" x="' + e[1] + '" y="' + (e[2] - 16) + '">' +
+      var e = EAST_CELLS[i], s = e[0], mk = EAST_MARK[i];
+      body += '<text class="hmark" x="' + mk[0] + '" y="' + mk[1] + '">' +
         houseNum(s, ascSign) + '</text>';
       body += labelBlock(labelsFor(placements, s, ascSign), e[1], e[2] + 4, 2);
     }
@@ -162,6 +186,9 @@
     '.frame{fill:none;stroke:#3a3a3a;stroke-width:1.3}' +
     'line{stroke:#3a3a3a;stroke-width:1.3}' +
     '.sign{fill:#b8791f;font:600 11px ' + MONO + ';text-anchor:start}' +
+    // House marker for North/East charts: centred and a touch smaller so it can sit in a
+    // corner without crowding the planets.
+    '.hmark{fill:#b8791f;font:600 10px ' + MONO + ';text-anchor:middle}' +
     '.planet{fill:#1a1a1a;font:600 12px ' + MONO + ';text-anchor:middle}' +
     '.has-lagna{fill:#b23b3b}' +
     '.chart-title{fill:#999;font:600 13px ' + MONO + ';text-anchor:middle}' +

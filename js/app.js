@@ -1,38 +1,107 @@
 /*
  * app.js — home-page form logic.
  *
- * Part of Shubharambham Horoscope (AGPL-3.0). Populates the place selector, validates the
- * form, builds the person payload, and navigates to result.html with the encoded state.
+ * Part of Shubharambham Horoscope (AGPL-3.0). Drives the searchable place combobox, the
+ * date/time inputs, validates the form, builds the person payload, and navigates to
+ * result.html with the encoded state.
  */
 (function () {
   "use strict";
 
   function byId(id) { return document.getElementById(id); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
 
-  // Map of place display label ("City — Region") -> place id, filled by populatePlaces().
-  var PLACE_LABEL_TO_ID = {};
+  // ---- Birth place: a custom, reliable combobox -----------------------------
+  // The native <datalist> was unreliable (broken filtering on desktop, rendered as keyboard
+  // suggestions on iOS). This is a small vanilla combobox instead (v0.5.1 item 1).
+  var PLACES_SORTED = [];   // [{ id, label }] sorted by city
+  var selectedPlaceId = null;
 
-  // Populate the searchable place list (a native <datalist>) from the bundled dataset,
-  // sorted by city. The <input> filters these as the user types (v0.5.0 item 2).
-  function populatePlaces() {
-    var dl = byId("place-list");
-    var places = (window.PLACES || []).slice().sort(function (a, b) {
+  function setupPlaceCombo() {
+    PLACES_SORTED = (window.PLACES || []).slice().sort(function (a, b) {
       return a.city.localeCompare(b.city);
+    }).map(function (p) {
+      return { id: p.id, label: p.city + " — " + p.region };
     });
-    PLACE_LABEL_TO_ID = {};
-    places.forEach(function (p) {
-      var label = p.city + " — " + p.region;
-      PLACE_LABEL_TO_ID[label] = p.id;
-      var opt = document.createElement("option");
-      opt.value = label;
-      dl.appendChild(opt);
+
+    var input = byId("place");
+    var list = byId("place-results");
+    var active = -1;        // index of the highlighted option within `shown`
+    var shown = [];         // the currently displayed subset of PLACES_SORTED
+
+    function open() { list.hidden = false; input.setAttribute("aria-expanded", "true"); }
+    function close() { list.hidden = true; input.setAttribute("aria-expanded", "false"); active = -1; }
+
+    function render(query) {
+      var q = query.trim().toLowerCase();
+      shown = PLACES_SORTED.filter(function (p) {
+        return q === "" || p.label.toLowerCase().indexOf(q) !== -1;
+      }).slice(0, 60);
+      list.innerHTML = "";
+      shown.forEach(function (p, i) {
+        var li = document.createElement("li");
+        li.setAttribute("role", "option");
+        li.dataset.id = p.id;
+        li.textContent = p.label;
+        if (i === active) li.className = "active";
+        list.appendChild(li);
+      });
+      if (shown.length) open(); else close();
+    }
+
+    function choose(i) {
+      if (i < 0 || i >= shown.length) return;
+      selectedPlaceId = shown[i].id;
+      input.value = shown[i].label;
+      close();
+    }
+
+    function highlight(next) {
+      if (list.hidden) { render(input.value); return; }
+      if (!shown.length) return;
+      active = (next + shown.length) % shown.length;
+      var lis = list.querySelectorAll("li");
+      lis.forEach(function (li, i) { li.classList.toggle("active", i === active); });
+      if (lis[active]) lis[active].scrollIntoView({ block: "nearest" });
+    }
+
+    input.addEventListener("input", function () { selectedPlaceId = null; render(input.value); });
+    input.addEventListener("focus", function () { render(input.value); });
+    input.addEventListener("blur", function () { setTimeout(close, 150); });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown") { e.preventDefault(); highlight(active + 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); highlight(active - 1); }
+      else if (e.key === "Enter") {
+        if (!list.hidden && active >= 0) { e.preventDefault(); choose(active); }
+      } else if (e.key === "Escape") { close(); }
+    });
+    // mousedown (not click) so selection fires before the input's blur closes the list.
+    list.addEventListener("mousedown", function (e) {
+      var li = e.target.closest("li");
+      if (!li) return;
+      e.preventDefault();
+      choose(shown.findIndex(function (p) { return p.id === li.dataset.id; }));
     });
   }
 
-  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  // Resolve whatever is in the place input to a dataset id: the explicit selection, or an
+  // exact (case-insensitive) label match if the user typed a full name without clicking.
+  function resolvePlaceId() {
+    if (selectedPlaceId) return selectedPlaceId;
+    var v = byId("place").value.trim().toLowerCase();
+    var hit = PLACES_SORTED.filter(function (p) { return p.label.toLowerCase() === v; })[0];
+    return hit ? hit.id : null;
+  }
 
-  // Populate the hour (0–23) and minute (0–59) dropdowns. Hours read as "14 (2 PM)" so the
-  // 24-hour value and its familiar 12-hour form are both visible (item 11).
+  // ---- Date: native date picker, defaulting to today (v0.5.1 items 2/3) -----
+  function setupDate() {
+    var d = byId("date");
+    var now = new Date();
+    d.value = now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate());
+  }
+
+  // ---- Time dropdowns -------------------------------------------------------
+  // Hours read as "14 (2 PM)" so the 24-hour value and its 12-hour form are both visible.
   function populateTime() {
     var hourSel = byId("hour");
     for (var h = 0; h < 24; h++) {
@@ -52,44 +121,6 @@
     }
   }
 
-  var MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
-    "Nov", "Dec"];
-
-  // Populate the Day/Month/Year dropdowns (dd/mm/yyyy order). Years run 2030→1900, which
-  // covers realistic birth dates; extend the range here if ever needed (v0.4.2 item 2).
-  function populateDate() {
-    var daySel = byId("day");
-    for (var d = 1; d <= 31; d++) {
-      var od = document.createElement("option");
-      od.value = String(d); od.textContent = pad(d);
-      daySel.appendChild(od);
-    }
-    var monSel = byId("month");
-    for (var mo = 1; mo <= 12; mo++) {
-      var om = document.createElement("option");
-      om.value = String(mo); om.textContent = pad(mo) + " (" + MONTH_ABBR[mo - 1] + ")";
-      monSel.appendChild(om);
-    }
-    var yearSel = byId("year");
-    for (var y = 2030; y >= 1900; y--) {
-      var oy = document.createElement("option");
-      oy.value = String(y); oy.textContent = String(y);
-      yearSel.appendChild(oy);
-    }
-  }
-
-  // Read the Day/Month/Year dropdowns into {y,mo,d} with real-calendar validation, or null.
-  function readDate() {
-    var d = byId("day").value, mo = byId("month").value, y = byId("year").value;
-    if (d === "" || mo === "" || y === "") return null;
-    d = +d; mo = +mo; y = +y;
-    // Reject impossible dates (e.g. 31 Feb) by round-tripping through Date.
-    var probe = new Date(Date.UTC(y, mo - 1, d));
-    if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== mo - 1 ||
-      probe.getUTCDate() !== d) return null;
-    return { y: y, mo: mo, d: d };
-  }
-
   function showError(msg) {
     var el = byId("form-error");
     el.textContent = msg;
@@ -100,13 +131,12 @@
     e.preventDefault();
     byId("form-error").hidden = true;
 
-    var dmy = readDate();                           // {y,mo,d} from the dropdowns
+    var dateVal = byId("date").value;               // "YYYY-MM-DD" from the native picker
     var hour = byId("hour").value;
     var minute = byId("minute").value;
-    // The place input holds the display label; resolve it back to the dataset id.
-    var placeId = PLACE_LABEL_TO_ID[byId("place").value.trim()];
+    var placeId = resolvePlaceId();
 
-    if (!dmy) return showError("Please select a valid birth date (day, month and year).");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) return showError("Please select the birth date.");
     if (hour === "" || minute === "") return showError("Please select the birth hour and minute.");
     if (!placeId) return showError("Please pick a birth place from the list.");
 
@@ -115,9 +145,8 @@
       return showError("Please select a valid time (hour 0–23, minute 0–59).");
     }
 
-    // Internal payload keeps the ISO local datetime; seconds are always :00 (item 10).
-    var dateTime = dmy.y + "-" + pad(dmy.mo) + "-" + pad(dmy.d) +
-      "T" + pad(h) + ":" + pad(mi) + ":00";
+    // Internal payload keeps the ISO local datetime; seconds are always :00.
+    var dateTime = dateVal + "T" + pad(h) + ":" + pad(mi) + ":00";
 
     var person = {
       Name: byId("name").value.trim(),
@@ -132,8 +161,8 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    populatePlaces();
-    populateDate();
+    setupPlaceCombo();
+    setupDate();
     populateTime();
     byId("birth-form").addEventListener("submit", onSubmit);
   });
