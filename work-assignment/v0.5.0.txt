@@ -1,0 +1,9 @@
+
+
+1. Reduce font size one level below. Too much of wrapping every Where
+
+2. Birth place dropdown should be searchable. It should start showing only the cities that that matched with my typed letters
+
+3. Plantery positions: Do not like horizontal scroll on mobile. May be make it better by showing them below. Distinguish planet lines with alternate colors
+
+4. Vimsottari mahadasa details are right alignied, show them as left aligned. 
