@@ -104,3 +104,67 @@ deferred per README. A 365.25-day year is used for date arithmetic.
 **Decision:** Two static HTML pages (`index.html`, `result.html`), plain CSS, and vanilla
 JS loaded via `<script>` tags. No bundler, no framework — matching the README's "native HTML
 and vanilla JavaScript" principle. The site opens directly in a browser with no server.
+
+---
+
+# v0.2.0 decisions (Swiss Ephemeris integration)
+
+Assignment `work-assignment/v0.2.0.txt`: "use swiss ephemeris now. emcc is already installed
+… git clone official swiss ephemeris and plug into the site." No human available; decisions
+taken autonomously.
+
+## 12. Swiss Ephemeris WASM now replaces the pure-JS engine (supersedes #1)
+
+**Decision:** The pure-JavaScript ephemeris from v0.1.0 is retired. `js/astro.js` is now a
+thin wrapper over the **official Swiss Ephemeris 2.10.03** compiled to WebAssembly with
+`emcc` (Emscripten 4.0.13). Source cloned from `github.com/aloistr/swisseph`; artifact and
+build script live in `vendor/sweph/`. Decision #1 (which deferred this) is **superseded** —
+the toolchain the earlier build lacked (emcc) is now present, as the assignment noted.
+
+**Why:** the README always wanted real Swiss Ephemeris; #1 only deferred it for lack of the
+toolchain. sweph is the authoritative sub-arcsecond reference and removes the truncation
+error of the JS series (which reached ~3–4′ for Jupiter/Saturn — see verification below).
+
+## 13. Moshier mode (`SEFLG_MOSEPH`), no `.se1` data files
+
+**Decision:** Compute in Swiss Ephemeris's **Moshier** mode, which uses built-in analytical
+theory and needs **no multi-megabyte ephemeris data files**.
+
+**Why:** the site is a static, offline, `file://` app with no server and no fetch. Shipping
+(or fetching) the `sepl_*.se1`/`semo_*.se1` files would break that constraint. Moshier is
+sub-arcsecond for the planets over several millennia and keeps the Moon within ~0.1′ — far
+better than the v0.1.0 JS engine and ample for signs/nakshatras/padas. The small accuracy
+gap vs. the full JPL-data ephemeris is an accepted trade for zero data files.
+
+## 14. `SINGLE_FILE=1` — WASM inlined into the JS
+
+**Decision:** Build with Emscripten `SINGLE_FILE=1`, embedding the `.wasm` as base64 inside
+`vendor/sweph/sweph.js` (one ~565 KB file) rather than shipping a separate `sweph.wasm`.
+
+**Why:** browsers block `fetch()`/`instantiateStreaming` of a sibling `.wasm` under the
+`file://` scheme, and the whole project is designed to run from `file://`. Inlining removes
+the fetch entirely, so the engine loads from a plain `<script>` with no network or file I/O.
+Verified working from `file://` via headless Chromium.
+
+## 15. Async load, synchronous compute; interface preserved
+
+**Decision:** WASM instantiation is asynchronous, so `Astro` gains one new method,
+`Astro.ready()` → Promise, which `result.js`'s `main()` awaits once before building the
+model. `Astro.compute(date, lat, lon)` stays **synchronous** and returns the exact same shape
+as v0.1.0 (`{jdUT, obliquity, ayanamsa, planetsTropical:{Name:{lon,lat}}, ascendantTropical}`),
+so the Jyotish layer, charts, dasha and PDF were untouched.
+
+The shim (`vendor/sweph/se_shim.c`) exposes a single `se_compute()` that fills a flat array
+of 13 doubles, so the JS glue makes one call per chart instead of juggling several sweph
+calls and their buffers. Ayanamsa stays **True Chitrapaksha** (`SE_SIDM_TRUE_CITRA`) and
+Rahu stays the **mean** node (`SE_MEAN_NODE`) — both matching v0.1.0 decisions #2 and #3.
+Planetary latitude is not consumed downstream (signs/nakshatras use longitude only), so the
+shim omits it and the wrapper reports `lat: 0` to preserve the `{lon,lat}` shape.
+
+**Verification:** rebuilt-in-Node cross-check + Playwright E2E from `file://`. At J2000 the
+engine gives Sun 280.37°, Jupiter 25.25°, Saturn 40.40°, ayanamsa 23.836° — all matching
+reference ephemerides. For 1990-05-15 08:30 IST Hyderabad the rendered chart shows Sun
+0°19′ Taurus / Krittika pada 2 and ayanamsa 23.7151, matching v0.1.0's hand-checked values;
+sweph vs. the old JS engine agreed to a few arcminutes (worst: Saturn ~4′, Jupiter ~3′).
+Charts (South/North), the dasha accordion and the 3-page PDF all render with zero console
+errors.
