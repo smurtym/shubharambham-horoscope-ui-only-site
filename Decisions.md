@@ -250,3 +250,40 @@ instruction ("if I am wrong … do not do anything"), nothing was changed. Docum
 **Decision:** The site font stack (`--font`) is now monospace, and the SVG charts and the
 jsPDF document (switched from Helvetica to Courier) use fixed-width type too, so planetary
 abbreviations and tabular figures align.
+
+---
+
+# v0.4.1 decisions (follow-up fixes)
+
+Assignment `work-assignment/v0.4.1.txt`: four reported issues + one enhancement.
+
+## 23. Cache-busting `?v=` on all local assets (fixes the "not fixed yet" reports)
+
+**Symptom:** after v0.4.0 the charts still showed "La", showed no planets, and lacked the
+number/abbr swap — yet the committed code was verifiably correct (Playwright screenshots
+proved it). **Root cause:** a **stale browser cache serving a partial mix** of old and new
+files. Specifically, a cached old `jyotish.js` (no `.label` field) combined with the new
+`result.js` (which pushes `g.label`) makes every planet label `undefined`; `[undefined].join(" ")`
+is an empty string, so the charts render only the (old) "La" ascendant marker and **no
+planets** — exactly the reported symptoms.
+
+**Decision:** append a `?v=<version>` query to every local `<script>`/`<link>` in both HTML
+pages, bumped each release, so a browser always loads a self-consistent set of files. Also
+hardened the render path (`g.label || g.abbr`) so a version skew degrades to plain
+abbreviations instead of blank labels. **Next incarnation: bump the `?v=` string every
+release** (it is `0.4.1` now).
+
+## 24. Dedicated Sun-only shim `se_sun_sid` (item 5)
+
+**Decision:** added `se_sun_sid(tjd_ut)` to the WASM shim, returning just the Sun's sidereal
+longitude (one Sun call + ayanamsa), exposed as `Astro.sunSidLon(date)`. The precise dasha
+(#17) now uses it instead of a full `se_compute` per root-finding step, cutting ~13 body/house
+calculations per evaluation down to 2. Verified bit-identical to the full-compute Sun value
+and the dasha output is unchanged.
+
+## 18a. Amendment to #18 — nodes are NOT always retrograde (item 3)
+
+**Decision (revises #18):** with the **true** node, Rahu/Ketu retrograde status now follows
+the **actual computed motion** (speed < 0) rather than being forced true; the true node turns
+direct near its stations (e.g. 2000-01-08, speed +0.003°/day → shown direct). The planetary
+table legend no longer claims "Rahu and Ketu are always retrograde."

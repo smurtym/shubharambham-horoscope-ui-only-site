@@ -38,9 +38,10 @@
   var NOUT = 23;
 
   var Mod = null;        // the instantiated Emscripten module
-  var outPtr = 0;        // reusable heap buffer for the 13 output doubles
+  var outPtr = 0;        // reusable heap buffer for the 23 output doubles
   var errPtr = 0;        // reusable 256-byte error buffer
   var se_compute = null; // cwrap'd entry point
+  var se_sun_sid = null; // cwrap'd Sun-only entry point (fast path for the dasha)
   var readyPromise = null;
 
   // Load and instantiate the WASM module exactly once.
@@ -57,6 +58,7 @@
       errPtr = Mod._malloc(256);
       se_compute = Mod.cwrap("se_compute", "number",
         ["number", "number", "number", "number", "number"]);
+      se_sun_sid = Mod.cwrap("se_sun_sid", "number", ["number", "number", "number"]);
       return true;
     });
     return readyPromise;
@@ -87,12 +89,11 @@
       var speed = vals[13 + j];
       planets[OUT_LABELS[j]] = { lon: norm360(vals[j]), lat: 0, speed: speed, retro: speed < 0 };
     }
-    // Rahu/Ketu (the lunar nodes) are retrograde by tradition and always marked so, even
-    // though the *true* node momentarily turns direct near its stations. Ketu is the point
-    // opposite Rahu, so it shares Rahu's motion.
-    planets.Rahu.retro = true;
+    // Ketu is the point opposite Rahu and shares its motion. With the *true* node its speed
+    // is usually (but not always) retrograde, so the retro flag reflects the actual computed
+    // motion rather than being forced true (v0.4.1 item 3).
     planets.Ketu = { lon: norm360(planets.Rahu.lon + 180), lat: 0,
-      speed: planets.Rahu.speed, retro: true };
+      speed: planets.Rahu.speed, retro: planets.Rahu.retro };
 
     return {
       jdUT: jdUT,
@@ -103,9 +104,25 @@
     };
   }
 
+  // Fast path: the Sun's sidereal ecliptic longitude only, in [0,360). Used by the precise
+  // Vimshottari dasha, which evaluates it hundreds of times while root-finding, so it avoids
+  // the full planet/house computation (v0.4.1 item 5). Must be called after Astro.ready().
+  function sunSidLon(date) {
+    if (!se_sun_sid) {
+      throw new Error("Astro.sunSidLon() called before Astro.ready() resolved.");
+    }
+    var jdUT = julianDayFromDate(date);
+    var rc = se_sun_sid(jdUT, outPtr, errPtr); // reuse outPtr; writes a single double
+    if (rc !== 0) {
+      throw new Error("Swiss Ephemeris error: " + Mod.UTF8ToString(errPtr));
+    }
+    return norm360(Mod.HEAPF64[outPtr >> 3]);
+  }
+
   global.Astro = {
     compute: compute,
     ready: ready,
+    sunSidLon: sunSidLon,
     norm360: norm360,
     julianDayFromDate: julianDayFromDate
   };

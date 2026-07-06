@@ -105,7 +105,7 @@
       model.chart.order.forEach(function (nm) {
         var gr = model.chart.grahas[nm];
         // gr.label parenthesises retrograde grahas, e.g. "(Ju)".
-        out[div === "d9" ? gr.navamsaSign : gr.sign].push(gr.label);
+        out[div === "d9" ? gr.navamsaSign : gr.sign].push(gr.label || gr.abbr);
       });
       return out;
     }

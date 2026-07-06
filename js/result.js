@@ -74,15 +74,10 @@
 
     var karakas = window.Jyotish.charaKarakas(chart.grahas);
     // Vimshottari is measured by the Sun's actual sidereal revolution (item 8): give the
-    // dasha builder a way to read the Sun's sidereal longitude at any instant. The Sun's
-    // geocentric longitude is independent of the observer, so the birth place's lat/long
-    // are passed only to satisfy the compute() signature.
-    function sunSidLonAt(date) {
-      var a = window.Astro.compute(date, place.lat, place.long);
-      return window.Astro.norm360(a.planetsTropical.Sun.lon - a.ayanamsa);
-    }
+    // dasha builder the Sun's sidereal longitude at any instant. Uses the dedicated Sun-only
+    // fast path (v0.4.1 item 5) so the hundreds of root-finding evaluations stay cheap.
     var dasha = window.Jyotish.vimshottari(birthDate, moonSid,
-      { sunLon0: sunSid, sunLonAt: sunSidLonAt });
+      { sunLon0: sunSid, sunLonAt: window.Astro.sunSidLon });
 
     return {
       person: person,
@@ -156,7 +151,7 @@
       var g = model.chart.grahas[name];
       var sign = divisional === "d9" ? g.navamsaSign : g.sign;
       // g.label parenthesises the abbreviation when the graha is retrograde, e.g. "(Ju)".
-      out[sign].push(g.label);
+      out[sign].push(g.label || g.abbr);
     });
     return out;
   }
@@ -246,7 +241,7 @@
     section.appendChild(wrap);
     section.appendChild(el("p", "note",
       "A graha shown in parentheses — e.g. <span class=\"abbr retro\">(Ju)</span> — is " +
-      "retrograde (vakri). Rahu and Ketu are always retrograde."));
+      "retrograde (vakri)."));
     content.appendChild(section);
   }
 
