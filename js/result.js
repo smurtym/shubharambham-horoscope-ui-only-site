@@ -318,13 +318,22 @@
 
   // -------------------------------------------------------------------------
   function main() {
-    var model;
-    try {
-      model = buildModel();
-    } catch (e) {
-      showFatal(e.message);
-      return;
-    }
+    // The Swiss Ephemeris WASM module loads asynchronously; wait for it before computing.
+    window.Astro.ready().then(function () {
+      var model;
+      try {
+        model = buildModel();
+      } catch (e) {
+        showFatal(e.message);
+        return;
+      }
+      render(model);
+    }).catch(function (e) {
+      showFatal("The astronomy engine failed to load: " + e.message);
+    });
+  }
+
+  function render(model) {
     var content = document.getElementById("content");
     content.innerHTML = "";
     renderHeader(model, content);
