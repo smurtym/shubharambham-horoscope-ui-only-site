@@ -168,3 +168,85 @@ reference ephemerides. For 1990-05-15 08:30 IST Hyderabad the rendered chart sho
 sweph vs. the old JS engine agreed to a few arcminutes (worst: Saturn ~4′, Jupiter ~3′).
 Charts (South/North), the dasha accordion and the 3-page PDF all render with zero console
 errors.
+
+---
+
+# v0.4.0 decisions (portal bug-fix batch)
+
+Assignment `work-assignment/v0.4.0.txt`: 13 numbered fixes to the portal. No human available;
+decisions taken autonomously and recorded here.
+
+## 16. East Indian chart is now the authentic anti-clockwise layout (supersedes #8)
+
+**Question:** v0.1.0 #8 admitted the East Indian chart used a "self-consistent" *clockwise*
+guess rather than a real regional standard (item 1 flagged it looked wrong).
+
+**Decision:** Render the authentic East Indian (Bengali/Odia/Maithili) layout: the 12 rasis
+are **fixed** to their cells (like the South Indian chart), **Aries (Meṣa) occupies the
+top-centre cell**, and the remaining signs run **anti-clockwise** from it. This replaces the
+earlier clockwise arrangement. `js/charts.js` `EAST_CELLS` was recomputed accordingly (top
+edge reads 2·1·12 left-to-right; numbers increase anti-clockwise around the ring).
+
+**Source:** Wikipedia, *Kundali (astrology)* — "The first rāśi, Meṣa occupies the central
+cell in the top row … the other rāśis … in the anti-clockwise direction." Corroborated by
+astrojyoti/astrosage descriptions ("fixed signs like South, charted anti-clockwise").
+
+## 17. Vimshottari measured by the Sun's real sidereal revolution (item 8)
+
+**Decision:** Dasha period boundaries are no longer placed by adding fixed-length calendar
+years. A Vimshottari "year" is one full **360° revolution of the Sun in sidereal longitude**
+(a sidereal / nakshatra year). For a boundary at dasha-age *A* (years since the first Maha
+Dasha began), the calendar instant is found by solving, with **Newton–Raphson**, for the time
+at which the Sun's sidereal longitude has advanced *(A − elapsed)·360°* from its birth value.
+`Jyotish.vimshottari` takes an injected `sunLonAt(date)` (wired in `result.js` to
+`Astro.compute`); the mean sidereal-year length (365.256363 d) is used only as the Newton
+seed and as an offline fallback.
+
+**Why sidereal (not tropical):** the app is sidereal/Vedic, and "the degrees the Earth
+revolved around the Sun" reads most naturally in the fixed-star frame (the nakshatra year).
+The choice mainly affects the mean year length by ~0.004%; the dominant, visible effect —
+captured either way — is the Earth's orbital eccentricity, which shifts antardasha
+boundaries landing in other seasons by up to ~3.4 days versus the old fixed-year method
+(measured on the 1990 test chart). Convergence is ~4 iterations/boundary (~440 `compute`
+calls per chart, sub-second).
+
+## 18. Retrograde marking convention (item 2)
+
+**Decision:** A graha is shown **parenthesised** iff retrograde — "(Ju)" retrograde, "Ju"
+direct — in the charts, the planetary table, and the PDF, per the standard convention the
+assignment named. Retrograde is read from the Swiss Ephemeris **longitude speed** (now
+returned by the shim; negative = retrograde). Sun and Moon are never retrograde. **Rahu and
+Ketu are always marked retrograde** by tradition (vakri), even though the *true* node
+momentarily turns direct near its stations. A one-line legend under the planetary table
+states the convention.
+
+## 19. Rahu/Ketu use the TRUE lunar node (item 5; supersedes #3/#15 mean-node choice)
+
+**Decision:** Rahu is now the **true** lunar node (`SE_TRUE_NODE`), and Ketu its opposite
+point, replacing the earlier mean node (`SE_MEAN_NODE`). The two differ by up to ~1.7°
+(e.g. at J2000, true 123.95° vs mean 125.04°).
+
+## 20. "As" ascendant abbreviation; South/East show sign numbers, North shows rasi (items 3,4)
+
+**Decision:** The ascendant marker inside charts is **"As"** (ascendant) rather than "La".
+The descriptive "Lagna (ascendant)" row label in the computed-values table is left unchanged
+(it is a full-word label, not the in-chart abbreviation the item referred to). Fixed-sign
+charts (South, East) are labelled with the **rasi number (1–12)**; the North Indian chart —
+whose houses are fixed while the rasi rotates — is labelled with the **sign abbreviation**
+(Ar, Ta, Ge …). This is the swap the assignment asked for (item 4).
+
+## 21. Item 6 (ephemeris path / init) — no change, by design
+
+**Decision:** No `swe_set_ephe_path` / init call was added. In **Moshier mode**
+(`SEFLG_MOSEPH`, the mode this site runs in) Swiss Ephemeris uses its built-in analytical
+theory, needs **no `.se1` data files**, and auto-initialises on the first `swe_calc_ut`
+call. An ephemeris path is only consulted for `SEFLG_SWIEPH`/`SEFLG_JPLEPH`. So the
+assignment's suspicion does not apply to our configuration — hence, per the item's own
+instruction ("if I am wrong … do not do anything"), nothing was changed. Documented in
+`vendor/sweph/se_shim.c`.
+
+## 22. Fixed-width fonts everywhere (item 7)
+
+**Decision:** The site font stack (`--font`) is now monospace, and the SVG charts and the
+jsPDF document (switched from Helvetica to Courier) use fixed-width type too, so planetary
+abbreviations and tabular figures align.

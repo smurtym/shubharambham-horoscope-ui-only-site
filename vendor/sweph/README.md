@@ -22,9 +22,14 @@ pure-JavaScript approximation used in v0.1.0.
   is far better than the v0.1.0 JS engine (sub-arcsecond for planets over several millennia;
   the Moon within ~0.1′), though slightly below the full JPL-data ephemeris.
 - **Ayanamsa:** True Chitrapaksha (`SE_SIDM_TRUE_CITRA`), matching the v0.1.0 decision.
-- **Rahu:** mean lunar node (`SE_MEAN_NODE`), matching v0.1.0.
+- **Rahu:** **true** lunar node (`SE_TRUE_NODE`) as of **v0.4.0** (was the mean node in
+  v0.2.0). Ketu is derived in JS as the opposite point.
+- **Speeds:** as of v0.4.0 the shim also returns each body's ecliptic-longitude speed
+  (`out[13..22]`), so `js/astro.js` can flag retrograde grahas (negative speed).
+- **No ephemeris path needed:** in Moshier mode there are no `.se1` files, so
+  `swe_set_ephe_path` is not called (it only matters for `SEFLG_SWIEPH`/`SEFLG_JPLEPH`).
 
-To rebuild, see the header of `build.sh`.
+To rebuild, see the header of `build.sh`. `se_compute` now fills **23** doubles (was 13).
 
 ## Licence note
 
