@@ -1,0 +1,19 @@
+This is common patterns going forward.
+-------------------------------------
+Going forward, I will assigning work to AI through, text files in work-assignment folder.
+
+Write your CLAUDE.md file (or whatever) with this work process
+Every time your start your work, read what was done in ai-work-sessions for history and read work-assignment to know what is yet to be done. I will not give specific instructions next time on words. I will just say work assigned, start grinding or whatever i feel like to say at that time.
+
+The work of each session is done by AI without human answering questions. Take best decisions for that time, and log in decisions.md file for future review.
+
+After all your work is done , write summary to ai-work-sessions. So, next incarnation of AI knows was done, what needs to be done.
+
+For every session, create a new branch (may be based on file name in work-assignment folder), do frequents git commits and push. So, I can monitor the progress from github.
+
+Document this work pattern somewhere that AI can read for every future session.
+
+-----------------
+
+You next activity for this session, use swiss ephemeris now. emcc is already installed on this system and is in path. git clone official swiss ephemeris and plug into the site.
+
