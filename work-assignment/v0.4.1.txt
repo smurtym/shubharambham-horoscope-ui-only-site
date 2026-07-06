@@ -1,0 +1,12 @@
+Some issues are not fixed yet
+
+1. Charts are not showing As, they still show La 
+
+2. No other planets are showing in Charts, completely messed up what was showing earlier
+
+3. Rahu, Ketu may not retrograde always with True positions, do not add this in description of Retrograde.
+
+4. I was asked to show 1, 2, 3 etc in south/east indian charts for house numbers. Ar, Ta etc in north charts. this is not done.
+
+Enhancement
+5. Have a seperate shim for Sun reduce the calculations
