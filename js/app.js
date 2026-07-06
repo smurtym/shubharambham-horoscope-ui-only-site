@@ -150,6 +150,10 @@
       mo.textContent = pad(m);
       minSel.appendChild(mo);
     }
+    // Default to the current local time (v0.5.4 item 2), matching the date defaulting to today.
+    var now = new Date();
+    hourSel.value = String(now.getHours());
+    minSel.value = String(now.getMinutes());
   }
 
   function showError(msg) {

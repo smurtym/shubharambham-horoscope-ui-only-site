@@ -29,9 +29,10 @@
     return pad2(d.getUTCDate()) + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear();
   }
 
-  // "0 Ar 38' 12\"" — degree, sign, arcminutes, arcseconds (see README output format).
+  // "0Ar38'12\"" — degree, sign, arcminutes, arcseconds, no internal spaces so it takes
+  // less horizontal room in the planetary table (v0.5.4 item 3).
   function fmtPos(g) {
-    return g.deg + " " + g.signAbbr + " " + pad2(g.min) + "' " + pad2(g.sec) + '"';
+    return g.deg + g.signAbbr + pad2(g.min) + "'" + pad2(g.sec) + '"';
   }
 
   function showFatal(msg) {
@@ -212,18 +213,18 @@
     table.innerHTML =
       "<thead><tr>" +
       "<th>Planet</th><th>Position</th><th>Nakshatra (Pada)</th>" +
-      "<th>Rasi</th><th>Navamsa</th><th>Karaka</th>" +
+      "<th>D1</th><th>D9</th><th>Karaka</th>" +
       "</tr></thead>";
     var tbody = el("tbody");
     // Lagna (ascendant) as the first row — same columns as a graha, no karaka (item 5).
     var a = model.chart.ascendant;
     var lagnaTr = el("tr");
     lagnaTr.innerHTML =
-      "<td class=\"pl\" data-label=\"Planet\">Lagna <span class=\"abbr\">As</span></td>" +
+      "<td class=\"pl\" data-label=\"Planet\">Lagna</td>" +
       "<td data-label=\"Position\">" + esc(fmtPos(a)) + "</td>" +
       "<td data-label=\"Nakshatra (Pada)\">" + esc(a.nakshatra) + " " + a.pada + "</td>" +
-      "<td data-label=\"Rasi\">" + esc(a.signAbbr) + "</td>" +
-      "<td data-label=\"Navamsa\">" + esc(a.navamsaAbbr) + "</td>" +
+      "<td data-label=\"D1\">" + esc(a.signAbbr) + "</td>" +
+      "<td data-label=\"D9\">" + esc(a.navamsaAbbr) + "</td>" +
       "<td data-label=\"Karaka\">—</td>";
     tbody.appendChild(lagnaTr);
     var PLANET_NAME = {
@@ -234,16 +235,15 @@
       var g = model.chart.grahas[name];
       var k = model.karakas[name];
       var tr = el("tr");
-      // The abbreviation is parenthesised only when retrograde (g.label), matching the
-      // charts, so "(Ju)" reads as a retrograde graha and "Ju" as direct.
+      // Plain planet name, no abbreviation; retrograde is a bare "(R)" suffix, no space
+      // (v0.5.4 item 3) — e.g. "Mercury(R)" instead of "Mercury (Me)".
       tr.innerHTML =
         "<td class=\"pl\" data-label=\"Planet\">" + esc(PLANET_NAME[name]) +
-        " <span class=\"abbr" + (g.retro ? " retro" : "") + "\">" + esc(g.label) +
-        "</span></td>" +
+        (g.retro ? "<span class=\"retro\">(R)</span>" : "") + "</td>" +
         "<td data-label=\"Position\">" + esc(fmtPos(g)) + "</td>" +
         "<td data-label=\"Nakshatra (Pada)\">" + esc(g.nakshatra) + " " + g.pada + "</td>" +
-        "<td data-label=\"Rasi\">" + esc(g.signAbbr) + "</td>" +
-        "<td data-label=\"Navamsa\">" + esc(g.navamsaAbbr) + "</td>" +
+        "<td data-label=\"D1\">" + esc(g.signAbbr) + "</td>" +
+        "<td data-label=\"D9\">" + esc(g.navamsaAbbr) + "</td>" +
         "<td data-label=\"Karaka\">" + (k ? "<span class=\"karaka\">" + esc(k.abbr) +
           "</span> " + esc(k.name) : "—") + "</td>";
       tbody.appendChild(tr);

@@ -44,8 +44,9 @@
   function fmtDate(d) {
     return pad2(d.getUTCDate()) + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear();
   }
+  // No internal spaces, matching the on-screen table (v0.5.4 item 3).
   function fmtPos(g) {
-    return g.deg + " " + g.signAbbr + " " + pad2(g.min) + "' " + pad2(g.sec) + '"';
+    return g.deg + g.signAbbr + pad2(g.min) + "'" + pad2(g.sec) + '"';
   }
 
   function generate(model) {
@@ -138,8 +139,8 @@
         { x: MARGIN, w: 70, t: "Planet" },
         { x: MARGIN + 70, w: 95, t: "Position" },
         { x: MARGIN + 165, w: 130, t: "Nakshatra (Pada)" },
-        { x: MARGIN + 295, w: 45, t: "Rasi" },
-        { x: MARGIN + 340, w: 55, t: "Navamsa" },
+        { x: MARGIN + 295, w: 45, t: "D1" },
+        { x: MARGIN + 340, w: 55, t: "D9" },
         { x: MARGIN + 395, w: 120, t: "Karaka" }
       ];
       doc.setFontSize(9).setTextColor(90);
@@ -149,15 +150,16 @@
       doc.setFont("courier", "normal").setTextColor(30);
       // Lagna (ascendant) first, then the grahas (item 5).
       ensure(16);
-      ["Lagna As", fmtPos(a), a.nakshatra + " " + a.pada, a.signAbbr, a.navamsaAbbr, "—"]
+      ["Lagna", fmtPos(a), a.nakshatra + " " + a.pada, a.signAbbr, a.navamsaAbbr, "—"]
         .forEach(function (txt, i) { doc.text(String(txt), cols[i].x, y); });
       y += 15;
       model.chart.order.forEach(function (nm) {
         ensure(16);
         var gr = model.chart.grahas[nm];
         var k = model.karakas[nm];
+        // Plain name + bare "(R)" if retrograde, no abbreviation (v0.5.4 item 3).
         var cells = [
-          nm + " " + gr.label,
+          nm + (gr.retro ? "(R)" : ""),
           fmtPos(gr),
           gr.nakshatra + " " + gr.pada,
           gr.signAbbr,
