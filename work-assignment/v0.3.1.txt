@@ -1,0 +1,25 @@
+This is again research only task. No code changes needed. Just write plan
+
+Plan A — Same-library differential sweep looks good.
+I will take reference of Swiss Ephemeris SWIEPH mode as gold standard
+No need to check lattitude of moon. Only longitude is enough as that is what we want.
+
+comparision to be done for UTC (not TT). May be we need to convert UTC to TT if needed before sending to Moshier
+compare geocentric, and use nonutation flag for both.
+
+Interested in following details.
+What are the times where max error occurs, and what is the max error? Local maxima under different times between 1950-2100 time period.
+If we take one sample per minute, how much % of samples are have 
+> 3 arc min
+> 1 arc min 
+> 0.5 arc min
+etc.
+
+I am thinking of calculating 80million minutes between interested range, store in sqlite and query as needed.
+
+If there are better ways (like using golden-section / Brent local maximization or any other), suggest.
+
+I am planning to creat a directory research to store all research programs (so not related to this app). Provide plan what tool chain better for this task.
+
+write report in session log
+
