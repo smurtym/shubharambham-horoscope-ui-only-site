@@ -1,0 +1,30 @@
+
+
+This is to fix few bugs/issues in portal. Code changes needed
+
+1. East Indian chart is anti clock, find out some material on internet how East India chart is looking. Fix it.
+
+2. No retrograde option is showing in charts and planetery positions. General convention is to show retrograde in chart is to have it in (). For example (Ju) instead of Ju mentions that Jupitor is in retrograde.
+
+3. As is abbreviation instead of Lagna
+
+4. South and East Indian charts show 1, 2, 3.. as hourse numbers. North Indian chart shows Ar, Ta, Ge etc in chart to denote the Rasi. This was done in reverse, fix it.
+
+5. Rahu/Ketu should be true nodes not mean nodes.
+
+6. I think we need to set a dummy ephe path, or call some init function before calling swiss ephemeris. Check manuals. If I am wrong in this, mention in summary, and do not do anything for this item.
+
+7. I like to have fixed width fonts everywhere. Use them (even inside charts)
+
+8. The calculation of Vimshottari to be not exactly years. It will be calculate based on number of degrees that the earth revolved around sun. For example, 20 years is after 7200 degrees of Sun longitude passes by. Have this precise calculations. Use Newton raphson or secant methods to find. 
+
+9. Change example name from Ramesh to Ram
+
+10. No seconds input is needed, remove it
+
+11. HH MM should be dropdown instead of typing. Keeps hours dropdown to show with 24 hours and AM/PM. For example "14 (2 PM)"
+
+12. Date input should be dd/mm/yyyy
+
+13. Thithi should show % remaining. For example Krishna Ashtami (45% remaining)
+
