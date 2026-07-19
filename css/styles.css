@@ -14,7 +14,7 @@
   --accent: #9a5b13;      /* saffron/ochre */
   --accent-soft: #f3ead9;
   --lagna: #b23b3b;
-  --rasi: #2f6f7a;        /* teal, for the sign abbreviation inside a position (v0.5.5 item 2) */
+  --rasi: #9a5b13;        /* teal, for the sign abbreviation inside a position (v0.5.5 item 2) */
   --radius: 8px;
   --maxw: 900px;
   /* Fixed-width (monospace) typography throughout the site (item 7). */
@@ -258,7 +258,7 @@ dl.values dd { margin: 0; font-weight: 600; }
   font: inherit;
   /* Small enough that South/North/East all fit on one line, even on narrow phones
      (v0.5.4 item 4). */
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink-soft);
@@ -309,7 +309,7 @@ table.planets td.pl { font-weight: 600; white-space: nowrap; }
 /* Retrograde grahas get a bare "(R)" suffix (v0.5.4 item 3); highlight it. */
 table.planets .retro { color: var(--lagna); font-weight: 700; }
 /* Sign abbreviation inside a position string, e.g. the "Pi" in "02Pi45'23"" (v0.5.5 item 2). */
-table.planets .rasi { color: var(--rasi); font-weight: 700; }
+table.planets .rasi { color: var(--rasi); background: var(--accent-soft); font-weight: 700; }
 .card .note {
   margin: 12px 0 0;
   font-size: 0.85rem;
