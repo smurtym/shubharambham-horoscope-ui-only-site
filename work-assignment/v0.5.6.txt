@@ -1,0 +1,13 @@
+
+1. Change color of rasi abbreviation in Planetary Positions. It currently uses a teal
+that doesn't match the rest of the site — switch it to the same ochre/accent color used
+elsewhere, and give it a light background so it stands out as a highlighted pill.
+
+2. The chart-type toggle buttons (South/North/East on the D1/D9 chart chips) are too
+small to read. Increase the font size.
+
+3. Change intro paragraph wording from "This tool takes a date..." to "This website
+takes a date...".
+
+4. Add "no ads" to the privacy statement list: "no ads, no accounts, no cookies, and no
+tracking."
